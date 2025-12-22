@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>📍 Junction Heatmap Generator</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/helmet.css') }}"
+    />
+    <style>
+      /* adapted styling from helmet UI - dark modern look */
+      body {
+        font-family: "Poppins", sans-serif;
+        background: #071020;
+        color: #e8f8f8;
+        margin: 0;
+        padding: 24px;
+      }
+      a.back-btn {
+        position: fixed;
+        left: 16px;
+        top: 16px;
+        background: rgba(0, 0, 0, 0.45);
+        color: #fff;
+        padding: 8px 10px;
+        border-radius: 8px;
+        text-decoration: none;
+        z-index: 2000;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 48px auto;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 6px;
+        color: #bfefff;
+      }
+      h2.sub {
+        text-align: center;
+        color: #dff8ff;
+        font-weight: 400;
+        margin-top: 4px;
+      }
+
+      .upload-box {
+        margin: 18px auto;
+        border: 2px dashed rgba(190, 239, 255, 0.12);
+        border-radius: 12px;
+        padding: 26px;
+        text-align: center;
+        cursor: pointer;
+        max-width: 900px;
+        background: rgba(255, 255, 255, 0.01);
+      }
+      .upload-box.dragover {
+        border-color: #00e1ff;
+        box-shadow: 0 6px 20px rgba(0, 225, 255, 0.06);
+      }
+      .upload-box input {
+        display: none;
+      }
+
+      .controls {
+        display: flex;
+        gap: 18px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 16px;
+      }
+      .control {
+        background: rgba(255, 255, 255, 0.02);
+        padding: 12px;
+        border-radius: 8px;
+        min-width: 220px;
+        text-align: left;
+      }
+      .control label {
+        display: block;
+        color: #bfefff;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      .control .value {
+        font-weight: 700;
+        color: #e8f8f8;
+        margin-left: 8px;
+      }
+
+      .img-row {
+        display: flex;
+        gap: 18px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+      .img-box {
+        background: rgba(255, 255, 255, 0.02);
+        padding: 12px;
+        border-radius: 8px;
+        width: 48%;
+        min-width: 260px;
+        text-align: center;
+        box-sizing: border-box;
+      }
+      .img-box img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 6px;
+        border: 3px solid rgba(255, 255, 255, 0.04);
+      }
+
+      #resultBox {
+        margin-top: 18px;
+        text-align: center;
+      }
+      #resultText {
+        font-size: 1.12rem;
+        margin: 8px 0;
+        color: #dff8ff;
+      }
+
+      .btn {
+        margin-top: 12px;
+        padding: 10px 14px;
+        background: #00c7a7;
+        color: #001;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .btn[disabled] {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .small {
+        font-size: 0.9rem;
+        color: #bfefff;
+      }
+      .hidden {
+        display: none;
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: 3px solid rgba(255, 255, 255, 0.12);
+        border-top-color: #00e1ff;
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      #downloadLink {
+        display: inline-block;
+        margin-left: 8px;
+        text-decoration: none;
+        padding: 8px 10px;
+        background: #2563eb;
+        color: #fff;
+        border-radius: 8px;
+      }
+
+      @media (max-width: 880px) {
+        .img-box {
+          width: 100%;
+        }
+        .controls {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <a href="{{ url_for('home') }}" class="back-btn">⬅ Back</a>
+
+    <div class="container" role="main" aria-labelledby="pageTitle">
+      <h1>SmartRaahi</h1>
+      <h1 id="pageTitle">Junction Congestion Heatmap</h1>
+      <h2 class="sub">
+        Upload a junction image — generate KDE-based congestion heatmap
+      </h2>
+
+      <div
+        id="dropZone"
+        class="upload-box"
+        tabindex="0"
+        aria-label="Upload image for heatmap"
+      >
+        <p style="font-size: 1.05rem; color: #dff8ff; margin: 6px 0">
+          Drag & drop an image here — or click to choose a file
+        </p>
+        <p class="small">
+          Supported: .jpg .jpeg .png (recommended ≤8MB). Use a top-down or wide
+          junction image.
+        </p>
+        <input id="fileInput" type="file" accept="image/*" />
+        <div
+          id="dropMsg"
+          style="margin-top: 12px; color: #aeeeff; font-weight: 600"
+        >
+          No file chosen
+        </div>
+      </div>
+
+      <div class="controls" aria-hidden="false">
+        <div class="control">
+          <label for="bwRange"
+            >KDE Bandwidth <span class="value" id="bwVal">0.25</span></label
+          >
+          <input
+            id="bwRange"
+            type="range"
+            min="0.05"
+            max="1.0"
+            step="0.01"
+            value="0.25"
+          />
+          <div class="small" style="margin-top: 6px">
+            Lower → finer peaks, Higher → smoother heatmap
+          </div>
+        </div>
+
+        <div class="control">
+          <label for="alphaRange"
+            >Heatmap Alpha (overlay strength)
+            <span class="value" id="alphaVal">0.8</span></label
+          >
+          <input
+            id="alphaRange"
+            type="range"
+            min="0.0"
+            max="1.0"
+            step="0.05"
+            value="0.8"
+          />
+          <div class="small" style="margin-top: 6px">
+            Blend heatmap with original image for context
+          </div>
+        </div>
+
+        <div
+          class="control"
+          style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <label style="width: 100%; text-align: center; margin-bottom: 6px"
+            >Actions</label
+          >
+          <button id="generateBtn" class="btn" style="width: 100%">
+            Generate Heatmap
+          </button>
+          <span
+            id="generateSpinner"
+            class="spinner hidden"
+            aria-hidden="true"
+          ></span>
+          <a
+            id="downloadLink"
+            class="hidden"
+            href="#"
+            download="junction_heatmap.jpg"
+            >Download Heatmap</a
+          >
+        </div>
+      </div>
+
+      <div id="previewContainer" class="hidden" aria-live="polite">
+        <div
+          class="img-row"
+          role="region"
+          aria-label="Image preview and heatmap"
+        >
+          <div class="img-box">
+            <h3 style="color: #bfefff; margin: 6px 0">Original Image</h3>
+            <img id="inputImage" src="#" alt="Uploaded image" />
+          </div>
+
+          <div class="img-box">
+            <h3 style="color: #bfefff; margin: 6px 0">Heatmap Result</h3>
+            <img id="heatmapImage" src="#" alt="Generated heatmap" />
+          </div>
+        </div>
+
+        <div id="resultBox">
+          <h2 id="resultText" class="small">Ready</h2>
+        </div>
+      </div>
+
+      <div
+        id="errorMsg"
+        class="hidden"
+        style="
+          color: #ffb3b3;
+          margin-top: 14px;
+          text-align: center;
+          font-weight: 700;
+        "
+      ></div>
+    </div>
+
+    <script>
+      (function () {
+        const dropZone = document.getElementById("dropZone");
+        const fileInput = document.getElementById("fileInput");
+        const dropMsg = document.getElementById("dropMsg");
+        const previewContainer = document.getElementById("previewContainer");
+        const inputImage = document.getElementById("inputImage");
+        const heatmapImage = document.getElementById("heatmapImage");
+        const generateBtn = document.getElementById("generateBtn");
+        const generateSpinner = document.getElementById("generateSpinner");
+        const resultText = document.getElementById("resultText");
+        const errorMsg = document.getElementById("errorMsg");
+        const downloadLink = document.getElementById("downloadLink");
+
+        const bwRange = document.getElementById("bwRange");
+        const alphaRange = document.getElementById("alphaRange");
+        const bwVal = document.getElementById("bwVal");
+        const alphaVal = document.getElementById("alphaVal");
+
+        let currentFile = null;
+
+        function showError(text) {
+          errorMsg.textContent = text;
+          errorMsg.classList.remove("hidden");
+          setTimeout(() => errorMsg.classList.add("hidden"), 6000);
+        }
+
+        // drag & click
+        dropZone.addEventListener("click", () => fileInput.click());
+        dropZone.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInput.click();
+          }
+        });
+
+        dropZone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dropZone.classList.add("dragover");
+        });
+        dropZone.addEventListener("dragleave", () =>
+          dropZone.classList.remove("dragover")
+        );
+        dropZone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dropZone.classList.remove("dragover");
+          const f = e.dataTransfer.files && e.dataTransfer.files[0];
+          if (f) handleFile(f);
+        });
+
+        fileInput.addEventListener("change", (e) => {
+          const f = e.target.files && e.target.files[0];
+          if (f) handleFile(f);
+        });
+
+        function handleFile(file) {
+          if (!file) return;
+          const allowed = ["image/jpeg", "image/png", "image/jpg"];
+          if (!allowed.includes(file.type)) {
+            showError("Unsupported file type. Please upload JPG or PNG.");
+            return;
+          }
+          if (file.size > 10 * 1024 * 1024) {
+            showError("File too large (max 10MB). Choose smaller image.");
+            return;
+          }
+
+          currentFile = file;
+          dropMsg.textContent = `Selected: ${file.name}`;
+          previewContainer.classList.remove("hidden");
+          resultText.textContent = "Ready to generate heatmap";
+          heatmapImage.src = "";
+          downloadLink.classList.add("hidden");
+
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            inputImage.src = ev.target.result;
+            heatmapImage.src = ev.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+
+        // sliders display values
+        bwRange.addEventListener(
+          "input",
+          () => (bwVal.textContent = bwRange.value)
+        );
+        alphaRange.addEventListener(
+          "input",
+          () => (alphaVal.textContent = alphaRange.value)
+        );
+
+        // generate
+        generateBtn.addEventListener("click", async () => {
+          if (!currentFile) {
+            showError("Please upload an image first.");
+            return;
+          }
+
+          generateBtn.disabled = true;
+          generateSpinner.classList.remove("hidden");
+          resultText.textContent = "Generating heatmap...";
+
+          const fd = new FormData();
+          fd.append("image", currentFile);
+          fd.append("bw_method", bwRange.value);
+          fd.append("alpha", alphaRange.value);
+
+          try {
+            const res = await fetch("/api/heatmap", {
+              method: "POST",
+              body: fd,
+            });
+            if (!res.ok) {
+              const txt = await res.text();
+              throw new Error(`Server ${res.status}: ${txt}`);
+            }
+            const json = await res.json();
+            if (!json.success)
+              throw new Error(json.error || "Heatmap generation failed");
+
+            if (json.heatmap_image) {
+              heatmapImage.src = json.heatmap_image;
+              downloadLink.href = json.heatmap_image;
+              downloadLink.classList.remove("hidden");
+              resultText.textContent = "Heatmap generated";
+            } else {
+              throw new Error("No heatmap returned from server");
+            }
+          } catch (err) {
+            console.error("Heatmap error:", err);
+            showError("Heatmap failed: " + (err.message || err));
+            resultText.textContent = "Generation failed";
+          } finally {
+            generateBtn.disabled = false;
+            generateSpinner.classList.add("hidden");
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

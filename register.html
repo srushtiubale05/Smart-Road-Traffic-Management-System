@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vehicle Registration - Traffic System</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem;
+      }
+      .registration-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .section-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+      }
+      .btn-register {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        border: none;
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        border-radius: 25px;
+      }
+      .btn-register:hover {
+        transform: scale(1.05);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="registration-card">
+        <h2 class="text-center mb-4">
+          <i class="fas fa-car"></i> Vehicle Registration
+        </h2>
+
+        <form id="registrationForm">
+          <!-- Owner Information -->
+          <div class="section-header">
+            <h4><i class="fas fa-user"></i> Owner Information</h4>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Full Name *</label>
+              <input
+                type="text"
+                class="form-control"
+                name="owner_name"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Phone Number *</label>
+              <input
+                type="tel"
+                class="form-control"
+                name="owner_phone"
+                pattern="[0-9]{10}"
+                placeholder="10 digit number"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" name="owner_email" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">License Number</label>
+              <input
+                type="text"
+                class="form-control"
+                name="license_number"
+                placeholder="e.g., MH12-20200012345"
+              />
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Aadhar Number</label>
+              <input
+                type="text"
+                class="form-control"
+                name="aadhar_number"
+                pattern="[0-9]{12}"
+                placeholder="12 digit number"
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Address</label>
+              <input type="text" class="form-control" name="owner_address" />
+            </div>
+          </div>
+
+          <!-- Vehicle Information -->
+          <div class="section-header mt-4">
+            <h4><i class="fas fa-motorcycle"></i> Vehicle Information</h4>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Plate Number *</label>
+              <input
+                type="text"
+                class="form-control"
+                name="plate_number"
+                placeholder="e.g., MH12AB1234"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Vehicle Type *</label>
+              <select class="form-select" name="vehicle_type" required>
+                <option value="">Select Type</option>
+                <option value="Bike">Bike/Motorcycle</option>
+                <option value="Car">Car</option>
+                <option value="Auto">Auto Rickshaw</option>
+                <option value="Truck">Truck</option>
+                <option value="Bus">Bus</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Brand</label>
+              <input
+                type="text"
+                class="form-control"
+                name="vehicle_brand"
+                placeholder="e.g., Honda"
+              />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Model</label>
+              <input
+                type="text"
+                class="form-control"
+                name="vehicle_model"
+                placeholder="e.g., Activa 6G"
+              />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Color</label>
+              <input
+                type="text"
+                class="form-control"
+                name="color"
+                placeholder="e.g., Black"
+              />
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Chassis Number</label>
+              <input type="text" class="form-control" name="chassis_number" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Engine Number</label>
+              <input type="text" class="form-control" name="engine_number" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Registration Date</label>
+              <input
+                type="date"
+                class="form-control"
+                name="registration_date"
+              />
+            </div>
+          </div>
+
+          <div class="text-center mt-4">
+            <button type="submit" class="btn btn-register btn-success">
+              <i class="fas fa-check-circle"></i> Register Vehicle
+            </button>
+            <a href="/dashboard" class="btn btn-secondary ms-2">
+              <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+          </div>
+        </form>
+
+        <div id="resultMessage" class="mt-4"></div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document
+        .getElementById("registrationForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(this);
+          const data = {};
+          formData.forEach((value, key) => (data[key] = value));
+
+          const resultDiv = document.getElementById("resultMessage");
+          resultDiv.innerHTML =
+            '<div class="alert alert-info">Processing registration...</div>';
+
+          try {
+            const response = await fetch("/api/register/complete", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5><i class="fas fa-check-circle"></i> Registration Successful!</h5>
+                            <p>Owner ID: ${result.owner_id}</p>
+                            <p>Vehicle ID: ${result.vehicle_id}</p>
+                            <p>Plate: ${data.plate_number}</p>
+                            <a href="/violations" class="btn btn-primary mt-2">View All Vehicles</a>
+                        </div>
+                    `;
+              document.getElementById("registrationForm").reset();
+            } else {
+              resultDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h5><i class="fas fa-exclamation-triangle"></i> Registration Failed</h5>
+                            <p>${result.error}</p>
+                        </div>
+                    `;
+            }
+          } catch (error) {
+            resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5>Error</h5>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+          }
+        });
+    </script>
+  </body>
+</html>

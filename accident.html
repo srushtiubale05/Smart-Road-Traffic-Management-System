@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Accident Risk Analyzer</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/accident.css') }}"
+    />
+  </head>
+
+  <body>
+    <video autoplay muted loop id="bgVideo">
+      <source
+        src="{{ url_for('static', filename='video/accident.mp4') }}"
+        type="video/mp4"
+      />
+    </video>
+
+    <a href="/index" class="back-btn">Back to Dashboard</a>
+
+    <div class="container">
+      <h1>SmartRaahi</h1>
+      <h1>Accident Risk Analyzer</h1>
+
+      <form id="riskForm">
+        <!-- USER INPUTS ONLY -->
+
+        <label>Driver Age Band:</label>
+        <select name="Age_band_of_driver">
+          <option>Under 18</option>
+          <option>18-30</option>
+          <option>31-50</option>
+          <option>Over 50</option>
+        </select>
+
+        <label>Driver Sex:</label>
+        <select name="Sex_of_driver">
+          <option>Male</option>
+          <option>Female</option>
+          <option>Unknown</option>
+        </select>
+
+        <label>Driving Experience:</label>
+        <select name="Driving_experience">
+          <option>Below 1yr</option>
+          <option>1-2yrs</option>
+          <option>2-5yrs</option>
+          <option>5-10yrs</option>
+          <option>Above 10yrs</option>
+        </select>
+
+        <label>Type of Vehicle:</label>
+        <select name="Type_of_vehicle">
+          <option>Car</option>
+          <option>Motorcycle</option>
+          <option>Bus</option>
+          <option>Truck</option>
+        </select>
+
+        <label>Vehicle Defect:</label>
+        <select name="Defect_of_vehicle">
+          <option>No Defect</option>
+          <option>Brake Failure</option>
+          <option>Light Problem</option>
+          <option>Other</option>
+        </select>
+
+        <label>Weather Condition:</label>
+        <select name="Weather_conditions">
+          <option>Clear</option>
+          <option>Rainy</option>
+          <option>Fog</option>
+          <option>Storm</option>
+        </select>
+
+        <button type="submit">Predict Risk</button>
+      </form>
+
+      <div id="resultCard" style="display: none">
+        <h2 id="riskResult"></h2>
+        <div id="probabilities"></div>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("riskForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(this);
+          const jsonData = {};
+          formData.forEach((value, key) => (jsonData[key] = value));
+
+          const response = await fetch("/api/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(jsonData),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            document.getElementById("riskResult").innerText =
+              "Predicted Risk: " + data.risk_level;
+            const probs = Object.entries(data.probabilities)
+              .map(([k, v]) => `<p>${k}: ${v.toFixed(1)}%</p>`)
+              .join("");
+            document.getElementById("probabilities").innerHTML = probs;
+            document.getElementById("resultCard").style.display = "block";
+          } else {
+            document.getElementById("riskResult").innerText =
+              "Error: " + (data.error || "Prediction failed");
+            document.getElementById("resultCard").style.display = "block";
+          }
+        });
+    </script>
+  </body>
+</html>

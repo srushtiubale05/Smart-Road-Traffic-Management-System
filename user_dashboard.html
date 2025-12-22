@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Traffic AI - User Dashboard</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+
+    <style>
+      #logoutBtn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        background-color: #ff4b5c;
+        color: #fff;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        z-index: 100;
+      }
+      #logoutBtn:hover {
+        background-color: #ff1e2d;
+      }
+    </style>
+  </head>
+  <body>
+    <video autoplay muted loop id="bgVideo">
+      <source
+        src="{{ url_for('static', filename='video/city1.mp4') }}"
+        type="video/mp4"
+      />
+    </video>
+
+    <div class="overlay"></div>
+
+    <button id="logoutBtn" onclick="window.location.href='/logout'">
+      Logout
+    </button>
+
+    <div class="container">
+      <h1 class="s1">
+        SmartRaahi — An Intelligent Road Safety and Traffic Management System
+      </h1>
+      <h1>User Dashboard</h1>
+      <p class="subtitle">
+        Predict | Detect | Stay Safe — Powered by AI & Machine Learning
+      </p>
+
+      <div class="card-grid">
+        <a href="/traffic" class="card">
+          <i class="fa-solid fa-car-side icon"></i>
+          <h2>Traffic Flow Prediction</h2>
+          <p>Check congestion levels in your area in real-time.</p>
+        </a>
+
+        <a href="/accident" class="card">
+          <i class="fa-solid fa-triangle-exclamation icon"></i>
+          <h2>Accident Risk Analysis</h2>
+          <p>Report and view accident risks relevant to your route.</p>
+        </a>
+
+        <a href="/maintenance" class="card">
+          <i class="fa-solid fa-screwdriver-wrench icon"></i>
+          <h2>Car Maintenance Prediction</h2>
+          <p>Check when your vehicle might need servicing to stay safe.</p>
+        </a>
+      </div>
+    </div>
+  </body>
+</html>

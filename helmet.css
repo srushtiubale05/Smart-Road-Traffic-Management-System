@@ -1,0 +1,171 @@
+/* 🔹 Background Video */
+video#bgVideo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+  filter: brightness(40%) saturate(120%);
+}
+
+/* 🌌 Page */
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  color: #fff;
+  text-align: center;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* 🏙️ Container */
+.container {
+  padding: 60px 20px;
+}
+
+h1 {
+  font-size: 2.5em;
+  text-shadow: 0 0 15px #00ffff;
+  margin-bottom: 30px;
+}
+
+/* 🖼️ Upload */
+.upload-box {
+  border: 2px dashed #00ffff;
+  border-radius: 15px;
+  width: 320px;
+  margin: 0 auto;
+  padding: 40px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+.upload-box:hover,
+.upload-box.dragover {
+  background: rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 20px #00ffff;
+}
+.upload-box i {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+.upload-box p {
+  font-size: 1em;
+}
+.upload-box input {
+  display: none;
+}
+
+/* 📷 Webcam button */
+#cameraBtn {
+  background: #00ffff;
+  color: #000;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: 0.3s;
+}
+#cameraBtn:hover {
+  background: #00e6e6;
+  box-shadow: 0 0 15px #00ffff;
+}
+
+/* 📸 Preview Section */
+.img-row {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+.img-box {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+}
+.img-box img {
+  width: 300px;
+  border-radius: 10px;
+  border: 5px solid #00ffff;
+  transition: border-color 0.3s;
+}
+
+/* ✅ Result Box */
+#resultBox {
+  margin-top: 20px;
+}
+#resultText {
+  font-size: 1.8em;
+  font-weight: bold;
+  text-shadow: 0 0 10px #00ffff;
+}
+
+/* 🎊 Confetti */
+#confetti {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: radial-gradient(
+      circle,
+      rgba(0, 255, 255, 0.8) 2px,
+      transparent 2px
+    ),
+    radial-gradient(circle, rgba(255, 255, 255, 0.8) 2px, transparent 2px),
+    radial-gradient(circle, rgba(0, 255, 128, 0.8) 2px, transparent 2px);
+  background-size: 10% 10%;
+  animation: fall 1.5s linear infinite;
+}
+@keyframes fall {
+  from {
+    background-position: 0 0, 50% 50%, 100% 100%;
+  }
+  to {
+    background-position: 0 100vh, 50% 150vh, 100% 200vh;
+  }
+}
+
+/* Utilities */
+.hidden {
+  display: none;
+}
+/* Universal Back Button */
+.back-btn {
+  position: fixed;
+  top: 25px;
+  left: 25px;
+  background: rgba(0, 225, 255, 0.15);
+  border: 2px solid #00e1ff;
+  color: #00e1ff;
+  padding: 10px 20px;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95em;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 15px rgba(0, 225, 255, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.back-btn:hover {
+  background: #00e1ff;
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px #00e1ff;
+}
+
+@media (max-width: 768px) {
+  .img-box img {
+    width: 90%;
+  }
+}

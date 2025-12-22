@@ -1,0 +1,889 @@
+<!-- Cleaned: comments and emojis removed -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Smart Traffic AI Dashboard</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        overflow-y: auto;
+        overflow-x: hidden;
+        color: white;
+        font-family: "Poppins", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #02081a;
+      }
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: -1;
+      }
+
+      #logoutBtn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        background-color: #ff4b5c;
+        color: white;
+        cursor: pointer;
+        z-index: 100;
+      }
+
+      .container {
+        text-align: center;
+        padding: 36px 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 2.6em;
+        letter-spacing: 1px;
+        text-shadow: 0 0 12px #00e1ff;
+        margin: 6px 0;
+      }
+      .subtitle {
+        color: #a5e6ff;
+        margin-bottom: 18px;
+      }
+
+      .card-grid {
+        margin-top: 40px;
+        display: grid;
+        gap: 26px;
+        padding: 0 6%;
+        justify-items: center;
+      }
+      @media (min-width: 900px) {
+        .card-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      .card {
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 14px;
+        padding: 22px;
+        width: 280px;
+        text-decoration: none;
+        color: white;
+        transition: all 0.35s;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 6px 18px rgba(0, 255, 255, 0.06);
+        position: relative;
+      }
+      .card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 14px 40px rgba(0, 255, 255, 0.12);
+      }
+
+      .notification-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: linear-gradient(135deg, #ff4b5c, #ff6b7c);
+        color: white;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 6px 12px;
+        border-radius: 20px;
+        box-shadow: 0 4px 12px rgba(255, 75, 92, 0.5);
+        animation: pulse 2s infinite;
+        z-index: 10;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 4px 12px rgba(255, 75, 92, 0.5);
+        }
+        50% {
+          transform: scale(1.1);
+          box-shadow: 0 6px 20px rgba(255, 75, 92, 0.8);
+        }
+      }
+
+      .card.violations-card {
+        border: 2px solid #ff4b5c;
+        background: rgba(255, 75, 92, 0.08);
+      }
+
+      .card.violations-card:hover {
+        border-color: #ff6b7c;
+        background: rgba(255, 75, 92, 0.12);
+      }
+
+      .icon {
+        font-size: 2.6em;
+        color: #00e1ff;
+        margin-bottom: 10px;
+      }
+
+      .violations-card .icon {
+        color: #ff4b5c;
+      }
+
+      .card h2 {
+        color: #00e1ff;
+        margin: 6px 0;
+        font-size: 1.2em;
+      }
+
+      .violations-card h2 {
+        color: #ff6b7c;
+      }
+
+      .card p {
+        color: #ccefff;
+        font-size: 0.92em;
+      }
+
+      .analytics-section {
+        display: none;
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        background: rgba(2, 8, 14, 0.96);
+        color: #00e1ff;
+        z-index: 9999;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .analytics-close {
+        position: sticky;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: rgba(2, 8, 14, 0.95);
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(0, 225, 255, 0.2);
+        z-index: 10000;
+      }
+
+      .analytics-close h2 {
+        margin: 0;
+        font-size: 1.6rem;
+        color: #00e1ff;
+      }
+
+      .close-btn {
+        background: #ff4b5c;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 14px;
+        transition: all 0.3s;
+      }
+
+      .close-btn:hover {
+        background: #ff6b7c;
+        transform: scale(1.05);
+      }
+      .card:hover .icon {
+        color: #ff00a0;
+        transform: rotate(10deg);
+      }
+
+      .violations-card:hover .icon {
+        color: #ff6b7c;
+        transform: scale(1.1) rotate(0deg);
+      }
+
+      .analytics-content {
+        padding: 20px 28px 40px;
+        max-width: 100%;
+      }
+
+      .analytics-section h2,
+      .analytics-section h3,
+      .analytics-section h4 {
+        text-align: center;
+        margin: 20px 0 10px;
+        color: #00e1ff;
+      }
+
+      #realtime-table {
+        width: calc(100% - 48px);
+        max-width: none;
+        border-collapse: collapse;
+        margin: 10px auto 30px;
+        font-size: 13px;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 8px;
+      }
+      #realtime-table th,
+      #realtime-table td {
+        padding: 12px 14px;
+        border: 1px solid rgba(0, 225, 255, 0.08);
+        text-align: center;
+        color: #dffbff;
+      }
+      #realtime-table th {
+        background: rgba(0, 225, 255, 0.05);
+        color: #00e1ff;
+      }
+
+      .analytics-section select {
+        width: 180px;
+        padding: 10px 12px;
+        margin: 10px auto 20px;
+        display: block;
+        background: rgba(255, 255, 255, 0.05);
+        color: #00e1ff;
+        border: 1px solid #00e1ff;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .analytics-section canvas {
+        display: block !important;
+        margin: 20px auto 40px;
+        width: calc(100% - 48px) !important;
+        max-width: calc(100% - 48px) !important;
+        height: 400px !important;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.015),
+          rgba(255, 255, 255, 0.01)
+        );
+        border-radius: 12px;
+        padding: 10px;
+        box-shadow: inset 0 6px 20px rgba(0, 0, 0, 0.35);
+        box-sizing: border-box;
+      }
+
+      .alerts-container {
+        margin: 30px auto 50px;
+        padding: 20px;
+        width: calc(100% - 48px);
+        max-width: 100%;
+      }
+
+      .alerts-container h4 {
+        margin-bottom: 20px;
+        font-size: 1.3em;
+      }
+
+      #alerts {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        padding: 10px;
+      }
+
+      .alert-badge {
+        display: inline-block;
+        margin: 0;
+        padding: 12px 18px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 14px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+        transition: transform 0.2s;
+      }
+
+      .alert-badge:hover {
+        transform: translateY(-2px);
+      }
+
+      .alert-high {
+        background: #ff7b7b;
+        color: #1b0b0b;
+      }
+      .alert-medium {
+        background: #ffcc66;
+        color: #2b1b00;
+      }
+      .alert-low {
+        background: #9ef2b6;
+        color: #05210a;
+      }
+
+      .no-alerts {
+        color: #a5e6ff;
+        font-size: 1.1em;
+        padding: 20px;
+        text-align: center;
+      }
+
+      @media (max-width: 920px) {
+        #realtime-table {
+          width: calc(100% - 28px);
+        }
+        .analytics-section canvas {
+          height: 350px !important;
+          width: calc(100% - 28px) !important;
+          max-width: calc(100% - 28px) !important;
+        }
+        .analytics-content {
+          padding: 15px 14px 30px;
+        }
+        .alerts-container {
+          width: calc(100% - 28px);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .analytics-content {
+          padding: 10px;
+        }
+        .analytics-section canvas {
+          height: 300px !important;
+          width: calc(100% - 20px) !important;
+          max-width: calc(100% - 20px) !important;
+        }
+        #realtime-table th,
+        #realtime-table td {
+          padding: 10px 8px;
+          font-size: 12px;
+        }
+        .card {
+          width: 92%;
+        }
+        .analytics-close h2 {
+          font-size: 1.2rem;
+        }
+        .alert-badge {
+          font-size: 12px;
+          padding: 10px 14px;
+        }
+        .alerts-container {
+          width: calc(100% - 20px);
+        }
+      }
+
+      @media (max-width: 720px) {
+        .card-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <video
+      autoplay
+      muted
+      loop
+      id="bgVideo"
+      style="
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        min-width: 100%;
+        min-height: 100%;
+        object-fit: cover;
+        z-index: -2;
+      "
+    >
+      <source
+        src="{{ url_for('static', filename='video/city1.mp4') }}"
+        type="video/mp4"
+      />
+    </video>
+    <div class="overlay"></div>
+
+    <button id="logoutBtn" onclick="window.location.href='/logout'">
+      Logout
+    </button>
+
+    <div class="container">
+      <h1>
+        SmartRaahi — An Intelligent Road Safety and Traffic Management System
+      </h1>
+      <h1>Admin Dashboard</h1>
+      <p class="subtitle">
+        Predict | Detect | Prevent — Powered by AI & Machine Learning
+      </p>
+
+      <div class="card-grid">
+        <a href="javascript:void(0);" class="card" id="analyticsCard">
+          <i class="fa-solid fa-chart-line icon"></i>
+          <h2>Traffic Analytics</h2>
+          <p>
+            View real-time traffic, historical trends, predictive traffic &
+            alerts for all junctions.
+          </p>
+        </a>
+
+        <a href="/helmet" class="card">
+          <i class="fa-solid fa-helmet-safety icon"></i>
+          <h2>Helmet Detection</h2>
+          <p>
+            Detect if a motorcyclist is wearing a helmet in real-time image.
+          </p>
+        </a>
+
+        <a href="/heatmap" class="card">
+          <i class="fa-solid fa-helmet-safety icon"></i>
+          <h2>Heatmap</h2>
+          <p></p>
+        </a>
+
+        <a href="/helmet_video" class="card">
+          <i class="fa-solid fa-video icon"></i>
+          <h2>Helmet Video Detection</h2>
+          <p>Detect helmet compliance in uploaded video footage.</p>
+        </a>
+
+        <a href="/stopline" class="card">
+          <i class="fa-solid fa-road-barrier icon"></i>
+          <h2>Stop-Line Violation Detection</h2>
+          <p>
+            Monitor stop-line compliance and automatically capture violating
+            vehicle plates.
+          </p>
+        </a>
+
+        <a href="/traffic" class="card">
+          <i class="fa-solid fa-car-side icon"></i>
+          <h2>Traffic Flow Prediction</h2>
+          <p>Predict congestion levels in your city based on real-time data.</p>
+        </a>
+
+        <a href="/accident" class="card">
+          <i class="fa-solid fa-triangle-exclamation icon"></i>
+          <h2>Accident Risk Analysis</h2>
+          <p>
+            Estimate accident risk using road, weather, and time parameters.
+          </p>
+        </a>
+
+        <a href="/maintenance" class="card">
+          <i class="fa-solid fa-screwdriver-wrench icon"></i>
+          <h2>Car Maintenance Prediction</h2>
+          <p>Predict when your vehicle will need servicing using ML models.</p>
+        </a>
+      </div>
+    </div>
+
+    <div class="analytics-section" id="analyticsSection" aria-hidden="true">
+      <div class="analytics-close">
+        <h2>Traffic Monitoring & Analytics</h2>
+        <button class="close-btn" id="closeAnalytics">Close</button>
+      </div>
+
+      <div class="analytics-content">
+        <h3>Real-time Traffic</h3>
+        <table id="realtime-table" role="table">
+          <tr>
+            <th>Junction</th>
+            <th>Traffic Level (%)</th>
+            <th>Status</th>
+          </tr>
+        </table>
+
+        <h3>Historical Traffic (Last 30 Days)</h3>
+        <select id="historical-junction">
+          <option value="">Select Junction</option>
+        </select>
+        <canvas
+          id="historicalChart"
+          width="600"
+          height="300"
+          aria-label="Historical Traffic Chart"
+        ></canvas>
+
+        <h3>Predictive Traffic (Next 24 Hours)</h3>
+        <select id="predictive-junction">
+          <option value="">Select Junction</option>
+        </select>
+        <canvas
+          id="predictiveChart"
+          width="600"
+          height="300"
+          aria-label="Predictive Traffic Chart"
+        ></canvas>
+
+        <div class="alerts-container">
+          <h4>Traffic Alerts</h4>
+          <div id="alerts" role="list" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Dashboard JS loaded");
+
+        const analyticsCard = document.getElementById("analyticsCard");
+        const analyticsSection = document.getElementById("analyticsSection");
+        const closeAnalytics = document.getElementById("closeAnalytics");
+        const realtimeTable = document.getElementById("realtime-table");
+
+        const histSelect = document.getElementById("historical-junction");
+        const predSelect = document.getElementById("predictive-junction");
+        const alertsEl = document.getElementById("alerts");
+
+        function showSelectPlaceholder(selectEl) {
+          if (!selectEl) return;
+          selectEl.innerHTML =
+            '<option value="">-- No junctions available --</option>';
+          selectEl.value = "";
+        }
+
+        async function ensureSelectsPopulated() {
+          try {
+            if (histSelect && histSelect.options.length > 1) return;
+            const res = await fetch("/api/realtime");
+            if (!res.ok) throw new Error("realtime API " + res.status);
+            const data = await res.json();
+            const junctions = Array.from(
+              new Set((data || []).map((r) => String(r.junction)))
+            );
+            if (junctions.length === 0) {
+              showSelectPlaceholder(histSelect);
+              showSelectPlaceholder(predSelect);
+              console.warn("No junctions from /api/realtime");
+              return;
+            }
+            function fill(sel) {
+              if (!sel) return;
+              sel.innerHTML = '<option value="">Select Junction</option>';
+              junctions.forEach((j) => {
+                const opt = document.createElement("option");
+                opt.value = j;
+                opt.textContent = j;
+                sel.appendChild(opt);
+              });
+            }
+            fill(histSelect);
+            fill(predSelect);
+            console.log("Selects populated from /api/realtime:", junctions);
+          } catch (err) {
+            console.error("Failed to populate selects:", err);
+            showSelectPlaceholder(histSelect);
+            showSelectPlaceholder(predSelect);
+          }
+        }
+
+        async function loadRealtime() {
+          try {
+            const res = await fetch("/api/realtime");
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const data = await res.json();
+            realtimeTable.innerHTML =
+              "<tr><th>Junction</th><th>Traffic Level (%)</th><th>Status</th></tr>";
+            (data || []).forEach((r) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `<td>${r.junction}</td><td>${
+                r.traffic_level ?? "-"
+              }</td><td>${r.status ?? "-"}</td>`;
+              realtimeTable.appendChild(tr);
+            });
+          } catch (err) {
+            console.error("loadRealtime error", err);
+            realtimeTable.innerHTML =
+              '<tr><td colspan="3">Failed to load realtime data</td></tr>';
+          }
+        }
+        loadRealtime();
+        setInterval(loadRealtime, 5000);
+
+        function createReadableLineChart(ctx, colorHex, titleText) {
+          return new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: [],
+              datasets: [
+                {
+                  label: titleText || "",
+                  data: [],
+                  borderColor: colorHex,
+                  backgroundColor: colorHex
+                    .replace("rgb", "rgba")
+                    .replace(")", ", 0.10)"),
+                  tension: 0.18,
+                  borderWidth: 2.6,
+                  pointRadius: 3.6,
+                  pointHoverRadius: 5,
+                  pointBackgroundColor: colorHex,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              aspectRatio: 2.2,
+              layout: { padding: { left: 8, right: 12, top: 6, bottom: 6 } },
+              plugins: {
+                legend: {
+                  display: true,
+                  position: "top",
+                  labels: { color: "#dff8ff", font: { size: 12 } },
+                },
+                title: {
+                  display: true,
+                  text: titleText || "",
+                  color: "#bff6ff",
+                  font: { size: 14, weight: "600" },
+                  padding: { top: 6, bottom: 8 },
+                },
+                tooltip: {
+                  enabled: true,
+                  backgroundColor: "rgba(6,18,28,0.96)",
+                  titleColor: "#aaf6ff",
+                  bodyColor: "#fff",
+                  titleFont: { size: 12, weight: "600" },
+                  bodyFont: { size: 12 },
+                  padding: 8,
+                  cornerRadius: 6,
+                },
+              },
+              scales: {
+                x: {
+                  ticks: {
+                    color: "#bfefff",
+                    font: { size: 11 },
+                    maxRotation: 30,
+                    minRotation: 0,
+                    autoSkip: true,
+                    maxTicksLimit: 10,
+                  },
+                  grid: { display: false },
+                },
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    color: "#bfefff",
+                    font: { size: 12 },
+                  },
+                  grid: { color: "rgba(190,239,255,0.06)", borderDash: [4, 6] },
+                },
+              },
+              interaction: { mode: "nearest", axis: "x", intersect: false },
+              animation: { duration: 250 },
+            },
+          });
+        }
+
+        function updateReadableChart(chart, labels, values, legendLabel) {
+          if (!chart) return;
+          const shortLabels = (labels || []).map((l) => {
+            const s = String(l);
+            const m = s.match(/(\d{4}-\d{2}-\d{2})[ T]?(\d{2}:\d{2})?/);
+            if (m) return m[2] ? m[2] : m[1].slice(5);
+            if (s.length > 12) return s.slice(0, 12) + "…";
+            return s;
+          });
+
+          chart.data.labels = shortLabels;
+          chart.data.datasets = [
+            {
+              label: legendLabel || chart.data.datasets[0]?.label || "",
+              data: values || [],
+              borderColor:
+                chart.data.datasets[0]?.borderColor || "rgb(54,162,235)",
+              backgroundColor:
+                chart.data.datasets[0]?.backgroundColor ||
+                "rgba(54,162,235,0.10)",
+              tension: 0.18,
+              borderWidth: 2.6,
+              pointRadius: 3.6,
+            },
+          ];
+
+          if (chart.options.plugins && chart.options.plugins.title) {
+            chart.options.plugins.title.text =
+              legendLabel || chart.options.plugins.title.text;
+            chart.options.plugins.title.font.size = 14;
+          }
+
+          const maxTicks = 10;
+          if (chart.options.scales && chart.options.scales.x) {
+            chart.options.scales.x.ticks.maxTicksLimit = Math.min(
+              maxTicks,
+              Math.max(4, Math.floor(shortLabels.length / 2))
+            );
+          }
+
+          chart.update();
+        }
+
+        let chartsInitialized = false;
+        let historicalChart = null;
+        let predictiveChart = null;
+
+        async function loadHistorical(junction) {
+          if (!junction) return;
+          try {
+            const res = await fetch(
+              `/api/historical/${encodeURIComponent(junction)}`
+            );
+            if (!res.ok) throw new Error("historical API " + res.status);
+            const data = await res.json();
+            const labels = (data || []).map((d) => d.date);
+            const values = (data || []).map((d) => d.traffic_level);
+
+            if (!historicalChart) {
+              const ctx = document
+                .getElementById("historicalChart")
+                .getContext("2d");
+              historicalChart = createReadableLineChart(
+                ctx,
+                "rgb(54,162,235)",
+                `${junction} Traffic (last 30 days)`
+              );
+            }
+            updateReadableChart(
+              historicalChart,
+              labels,
+              values,
+              `${junction} Traffic (last 30 days)`
+            );
+          } catch (err) {
+            console.error("loadHistorical error", err);
+          }
+        }
+
+        async function loadPredictive(junction) {
+          if (!junction) return;
+          try {
+            const res = await fetch(
+              `/api/predictive/${encodeURIComponent(junction)}`
+            );
+            if (!res.ok) throw new Error("predictive API " + res.status);
+            const data = await res.json();
+
+            const labels = Array.isArray(data.hours) ? data.hours : [];
+            const values = Array.isArray(data.predictions)
+              ? data.predictions
+              : [];
+
+            if (!predictiveChart) {
+              const ctx = document
+                .getElementById("predictiveChart")
+                .getContext("2d");
+              predictiveChart = createReadableLineChart(
+                ctx,
+                "rgb(255,99,132)",
+                `${junction} Predicted Traffic (next 24h)`
+              );
+            }
+            updateReadableChart(
+              predictiveChart,
+              labels,
+              values,
+              `${junction} Predicted Traffic (next 24h)`
+            );
+
+            alertsEl.innerHTML = "";
+            const rawAlerts = Array.isArray(data.alerts) ? data.alerts : [];
+
+            if (!rawAlerts || rawAlerts.length === 0) {
+              const no = document.createElement("div");
+              no.className = "no-alerts";
+              no.textContent =
+                "No alerts for the next 24 hours - Traffic flowing smoothly!";
+              alertsEl.appendChild(no);
+            } else {
+              rawAlerts.forEach((item) => {
+                const hour = item.hour || "";
+                const text = item.alert || String(item);
+                const badge = document.createElement("span");
+                badge.className = "alert-badge";
+                badge.textContent = hour ? `${hour} — ${text}` : text;
+
+                const t = String(text).toLowerCase();
+                if (t.includes("high") || t.includes("heavy"))
+                  badge.classList.add("alert-high");
+                else if (t.includes("low") || t.includes("smooth"))
+                  badge.classList.add("alert-low");
+                else badge.classList.add("alert-medium");
+
+                alertsEl.appendChild(badge);
+              });
+            }
+          } catch (err) {
+            console.error("loadPredictive error", err);
+          }
+        }
+
+        function closeAnalyticsSection() {
+          analyticsSection.style.display = "none";
+          analyticsSection.setAttribute("aria-hidden", "true");
+        }
+
+        analyticsCard.addEventListener("click", async () => {
+          const hidden =
+            window.getComputedStyle(analyticsSection).display === "none";
+          if (hidden) {
+            analyticsSection.style.display = "block";
+            analyticsSection.setAttribute("aria-hidden", "false");
+            analyticsSection.scrollTop = 0;
+
+            await ensureSelectsPopulated();
+
+            const selectedHist = histSelect ? histSelect.value : null;
+            const selectedPred = predSelect ? predSelect.value : null;
+
+            if (!chartsInitialized) {
+              await loadHistorical(selectedHist);
+              await loadPredictive(selectedPred);
+              if (histSelect)
+                histSelect.addEventListener("change", (e) =>
+                  loadHistorical(e.target.value)
+                );
+              if (predSelect)
+                predSelect.addEventListener("change", (e) =>
+                  loadPredictive(e.target.value)
+                );
+              chartsInitialized = true;
+            } else {
+              loadHistorical(selectedHist);
+              loadPredictive(selectedPred);
+            }
+          } else {
+            closeAnalyticsSection();
+          }
+        });
+
+        closeAnalytics.addEventListener("click", closeAnalyticsSection);
+
+        document.addEventListener("keydown", (e) => {
+          if (
+            e.key === "Escape" &&
+            analyticsSection.style.display === "block"
+          ) {
+            closeAnalyticsSection();
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

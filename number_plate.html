@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🚘 Number Plate Detection</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/number_plate.css') }}"
+    />
+    <script
+      src="https://kit.fontawesome.com/a076d05399.js"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <!-- Background video -->
+    <video autoplay muted loop id="bgVideo">
+      <source
+        src="{{ url_for('static', filename='video/number_plate.mp4') }}"
+        type="video/mp4"
+      />
+    </video>
+    <a href="{{ url_for('home') }}" class="back-btn">⬅ Back to Dashboard</a>s
+    <div class="container">
+      <h1>🚘 Number Plate Recognition</h1>
+
+      <div class="upload-box" id="dropZone">
+        <i class="fas fa-upload"></i>
+        <p>Drag & Drop an image here<br />or click to upload</p>
+        <input type="file" id="fileInput" accept="image/*" />
+      </div>
+
+      <div id="previewContainer" class="hidden">
+        <img id="previewImage" src="#" alt="Uploaded Image" />
+        <div id="loader" class="loader hidden"></div>
+        <div id="resultBox" class="hidden">
+          <h3>Detected Number:</h3>
+          <p id="detectedNumber" class="typing-text"></p>
+          <button id="copyBtn">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const dropZone = document.getElementById("dropZone");
+      const fileInput = document.getElementById("fileInput");
+      const previewContainer = document.getElementById("previewContainer");
+      const previewImage = document.getElementById("previewImage");
+      const loader = document.getElementById("loader");
+      const resultBox = document.getElementById("resultBox");
+      const detectedNumber = document.getElementById("detectedNumber");
+      const copyBtn = document.getElementById("copyBtn");
+
+      // 🔹 Drag and drop events
+      dropZone.addEventListener("click", () => fileInput.click());
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("dragover");
+      });
+      dropZone.addEventListener("dragleave", () =>
+        dropZone.classList.remove("dragover")
+      );
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("dragover");
+        handleFile(e.dataTransfer.files[0]);
+      });
+      fileInput.addEventListener("change", (e) =>
+        handleFile(e.target.files[0])
+      );
+
+      // 🔹 Handle file and simulate recognition
+      function handleFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          previewContainer.classList.remove("hidden");
+          previewImage.src = e.target.result;
+          resultBox.classList.add("hidden");
+          loader.classList.remove("hidden");
+
+          // Simulate recognition delay
+          setTimeout(() => {
+            loader.classList.add("hidden");
+            resultBox.classList.remove("hidden");
+            simulateTyping("MH12AB1234"); // Mock detected number
+          }, 2000);
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // 🔹 Typing animation
+      function simulateTyping(text) {
+        detectedNumber.innerHTML = "";
+        let i = 0;
+        const typing = setInterval(() => {
+          detectedNumber.innerHTML += text.charAt(i);
+          i++;
+          if (i >= text.length) clearInterval(typing);
+        }, 100);
+      }
+
+      // 🔹 Copy button
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(detectedNumber.innerText);
+        copyBtn.innerText = "Copied!";
+        setTimeout(() => (copyBtn.innerText = "Copy"), 1500);
+      });
+    </script>
+  </body>
+</html>

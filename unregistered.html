@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unregistered Violations - Traffic Management</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .header {
+        background: white;
+        padding: 20px 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header h1 {
+        color: #667eea;
+        font-size: 28px;
+      }
+
+      .back-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: transform 0.2s;
+      }
+
+      .back-btn:hover {
+        transform: translateY(-2px);
+      }
+
+      .stats-bar {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        margin-bottom: 30px;
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .stat-item {
+        flex: 1;
+        min-width: 200px;
+        text-align: center;
+        padding: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+        color: white;
+      }
+
+      .stat-item h3 {
+        font-size: 36px;
+        margin-bottom: 5px;
+      }
+
+      .stat-item p {
+        font-size: 14px;
+        opacity: 0.9;
+      }
+
+      .violations-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 25px;
+      }
+
+      .violation-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s;
+      }
+
+      .violation-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .violation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #eee;
+      }
+
+      .plate-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #667eea;
+        font-family: "Courier New", monospace;
+      }
+
+      .status-badge {
+        background: #ff6b6b;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .plate-image {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        border: 2px solid #eee;
+      }
+
+      .violation-details {
+        margin-bottom: 15px;
+      }
+
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .detail-label {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .detail-value {
+        font-weight: bold;
+        color: #333;
+        font-size: 14px;
+      }
+
+      .fine-amount {
+        color: #e74c3c;
+        font-size: 18px;
+      }
+
+      .confidence {
+        color: #27ae60;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .btn {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 14px;
+      }
+
+      .btn-register {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-ignore {
+        background: #e0e0e0;
+        color: #666;
+      }
+
+      .btn-ignore:hover {
+        background: #d0d0d0;
+      }
+
+      .empty-state {
+        background: white;
+        padding: 60px 20px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .empty-state h2 {
+        color: #667eea;
+        margin-bottom: 10px;
+      }
+
+      .empty-state p {
+        color: #666;
+      }
+
+      /* Modal styles */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        overflow-y: auto;
+      }
+
+      .modal-content {
+        background: white;
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 30px;
+        border-radius: 15px;
+        position: relative;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #eee;
+      }
+
+      .modal-header h2 {
+        color: #667eea;
+      }
+
+      .close-btn {
+        font-size: 30px;
+        cursor: pointer;
+        color: #666;
+        background: none;
+        border: none;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: bold;
+        font-size: 14px;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      .submit-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.3s;
+      }
+
+      .submit-btn:hover {
+        transform: translateY(-2px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>⚠️ Unregistered Violations</h1>
+      <a href="/index" class="back-btn">← Back to Dashboard</a>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-item">
+        <h3 id="total-violations">0</h3>
+        <p>Total Unregistered</p>
+      </div>
+      <div class="stat-item">
+        <h3 id="total-fines">₹0</h3>
+        <p>Pending Fines</p>
+      </div>
+      <div class="stat-item">
+        <h3 id="today-count">0</h3>
+        <p>Detected Today</p>
+      </div>
+    </div>
+
+    <div class="violations-grid" id="violations-grid">
+      <!-- Violations will be loaded here -->
+    </div>
+
+    <div class="empty-state" id="empty-state" style="display: none">
+      <h2>✅ No Unregistered Violations</h2>
+      <p>All detected vehicles are registered in the system.</p>
+    </div>
+
+    <!-- Registration Modal -->
+    <div class="modal" id="registration-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>🚗 Register Vehicle</h2>
+          <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+
+        <form id="registration-form">
+          <input type="hidden" id="violation-id" name="violation_id" />
+
+          <h3 style="color: #667eea; margin-bottom: 15px">Vehicle Details</h3>
+
+          <div class="form-group">
+            <label>Plate Number *</label>
+            <input
+              type="text"
+              id="plate-number"
+              name="plate_number"
+              required
+              readonly
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Vehicle Type *</label>
+              <select name="vehicle_type" required>
+                <option value="">Select Type</option>
+                <option value="Bike">Bike</option>
+                <option value="Car">Car</option>
+                <option value="Auto">Auto</option>
+                <option value="Truck">Truck</option>
+                <option value="Bus">Bus</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Brand *</label>
+              <input
+                type="text"
+                name="vehicle_brand"
+                placeholder="e.g., Honda, Maruti"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Model *</label>
+              <input
+                type="text"
+                name="vehicle_model"
+                placeholder="e.g., Activa, Swift"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Color *</label>
+              <input
+                type="text"
+                name="color"
+                placeholder="e.g., Black, White"
+                required
+              />
+            </div>
+          </div>
+
+          <h3 style="color: #667eea; margin: 25px 0 15px">Owner Details</h3>
+
+          <div class="form-group">
+            <label>Owner Name *</label>
+            <input
+              type="text"
+              name="owner_name"
+              placeholder="Full Name"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Phone Number *</label>
+              <input
+                type="tel"
+                name="phone"
+                placeholder="10-digit mobile"
+                pattern="[0-9]{10}"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                name="email"
+                placeholder="email@example.com"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Address *</label>
+            <textarea
+              name="address"
+              rows="3"
+              placeholder="Complete address"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>License Number *</label>
+              <input
+                type="text"
+                name="license_number"
+                placeholder="e.g., MH12-20200012345"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Aadhar Number</label>
+              <input
+                type="text"
+                name="aadhar_number"
+                placeholder="12-digit Aadhar"
+                pattern="[0-9]{12}"
+              />
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn">
+            ✅ Register & Apply Fine
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      let violations = [];
+
+      // Load violations on page load
+      window.addEventListener("load", loadViolations);
+
+      async function loadViolations() {
+        try {
+          const response = await fetch("/api/unregistered_violations");
+          const data = await response.json();
+
+          if (data.success) {
+            violations = data.violations;
+            displayViolations(violations);
+            updateStats(violations);
+          }
+        } catch (error) {
+          console.error("Error loading violations:", error);
+        }
+      }
+
+      function displayViolations(violations) {
+        const grid = document.getElementById("violations-grid");
+        const emptyState = document.getElementById("empty-state");
+
+        if (!violations || violations.length === 0) {
+          grid.style.display = "none";
+          emptyState.style.display = "block";
+          return;
+        }
+
+        grid.style.display = "grid";
+        emptyState.style.display = "none";
+
+        grid.innerHTML = violations
+          .map(
+            (v) => `
+                <div class="violation-card">
+                    <div class="violation-header">
+                        <div class="plate-number">${v.detected_plate}</div>
+                        <div class="status-badge">UNREGISTERED</div>
+                    </div>
+                    
+                    ${
+                      v.plate_image_path
+                        ? `
+                        <img src="${v.plate_image_path}" alt="Plate" class="plate-image" onerror="this.style.display='none'">
+                    `
+                        : ""
+                    }
+                    
+                    <div class="violation-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Violation Type:</span>
+                            <span class="detail-value">${
+                              v.violation_type
+                            }</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Fine Amount:</span>
+                            <span class="detail-value fine-amount">₹${
+                              v.fine_amount
+                            }</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">OCR Confidence:</span>
+                            <span class="detail-value confidence">${(
+                              v.confidence * 100
+                            ).toFixed(1)}%</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Detected:</span>
+                            <span class="detail-value">${new Date(
+                              v.violation_date
+                            ).toLocaleString()}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Location:</span>
+                            <span class="detail-value">${
+                              v.location || "Unknown"
+                            }</span>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-register" onclick="openRegistrationModal(${
+                          v.id
+                        }, '${v.detected_plate}')">
+                            📝 Register Vehicle
+                        </button>
+                        <button class="btn btn-ignore" onclick="ignoreViolation(${
+                          v.id
+                        })">
+                            ❌ Ignore
+                        </button>
+                    </div>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      function updateStats(violations) {
+        const total = violations.length;
+        const totalFines = violations.reduce(
+          (sum, v) => sum + parseFloat(v.fine_amount),
+          0
+        );
+        const today = violations.filter((v) => {
+          const date = new Date(v.violation_date);
+          const now = new Date();
+          return date.toDateString() === now.toDateString();
+        }).length;
+
+        document.getElementById("total-violations").textContent = total;
+        document.getElementById("total-fines").textContent = `₹${totalFines}`;
+        document.getElementById("today-count").textContent = today;
+      }
+
+      function openRegistrationModal(violationId, plateNumber) {
+        document.getElementById("violation-id").value = violationId;
+        document.getElementById("plate-number").value = plateNumber;
+        document.getElementById("registration-modal").style.display = "block";
+      }
+
+      function closeModal() {
+        document.getElementById("registration-modal").style.display = "none";
+        document.getElementById("registration-form").reset();
+      }
+
+      document
+        .getElementById("registration-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = new FormData(this);
+          const data = Object.fromEntries(formData);
+
+          try {
+            const response = await fetch("/api/register_vehicle", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              alert(
+                `✅ Vehicle registered successfully!\n\nFine of ₹${result.fine_amount} has been applied to ${result.owner_name}.`
+              );
+              closeModal();
+              loadViolations(); // Reload the list
+            } else {
+              alert("❌ Error: " + result.error);
+            }
+          } catch (error) {
+            console.error("Registration error:", error);
+            alert("❌ Failed to register vehicle. Please try again.");
+          }
+        });
+
+      async function ignoreViolation(violationId) {
+        if (!confirm("Are you sure you want to ignore this violation?")) {
+          return;
+        }
+
+        try {
+          const response = await fetch("/api/ignore_violation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ violation_id: violationId }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            alert("✅ Violation ignored");
+            loadViolations();
+          } else {
+            alert("❌ Error: " + result.error);
+          }
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      }
+
+      // Close modal when clicking outside
+      window.onclick = function (event) {
+        const modal = document.getElementById("registration-modal");
+        if (event.target === modal) {
+          closeModal();
+        }
+      };
+    </script>
+  </body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>🚦 Real-Time Traffic Flow Predictor</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/traffic.css') }}"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        color: #fff;
+        background: #111;
+        margin: 0;
+        padding: 0;
+      }
+      #bg-video {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        min-width: 100%;
+        min-height: 100%;
+        z-index: -1;
+        filter: brightness(0.5);
+      }
+      .container {
+        position: relative;
+        padding: 50px 20px;
+        max-width: 900px;
+        margin: auto;
+        text-align: center;
+      }
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: -1;
+      }
+      .predict-btn {
+        margin-top: 15px;
+        padding: 12px 30px;
+        font-size: 16px;
+        cursor: pointer;
+        background: #00ffff;
+        border: none;
+        border-radius: 8px;
+        color: #000;
+        font-weight: bold;
+        transition: all 0.3s;
+      }
+      .predict-btn:hover {
+        background: #00cccc;
+        transform: scale(1.05);
+      }
+      #current-traffic {
+        margin-top: 30px;
+        padding: 25px;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 12px;
+        display: none;
+        border: 2px solid #00ffff;
+      }
+      #current-traffic h2 {
+        font-size: 28px;
+        margin-bottom: 10px;
+      }
+      #current-traffic .traffic-status {
+        font-size: 36px;
+        font-weight: bold;
+        margin: 15px 0;
+      }
+      #forecast-card {
+        margin-top: 30px;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 12px;
+        display: none;
+      }
+      #forecast-card h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+        color: #00ffff;
+      }
+      .chart-container {
+        position: relative;
+        height: 400px;
+        width: 100%;
+        margin-top: 20px;
+      }
+      #trafficChart {
+        max-height: 400px;
+      }
+      .back-btn {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        text-decoration: none;
+        color: #00ffff;
+        font-size: 18px;
+        font-weight: bold;
+        transition: color 0.3s;
+        z-index: 10;
+      }
+      .back-btn:hover {
+        color: #00cccc;
+      }
+      form {
+        background: rgba(0, 0, 0, 0.6);
+        padding: 30px;
+        border-radius: 12px;
+        max-width: 500px;
+        margin: 30px auto;
+      }
+      form label {
+        display: block;
+        margin-top: 15px;
+        font-size: 16px;
+        text-align: left;
+        color: #00ffff;
+        font-weight: bold;
+      }
+      form select,
+      form input {
+        width: 100%;
+        padding: 12px;
+        margin-top: 5px;
+        border-radius: 6px;
+        border: 1px solid #00ffff;
+        background: rgba(255, 255, 255, 0.1);
+        color: #00ffff;
+        font-size: 14px;
+      }
+      form select:focus,
+      form input:focus {
+        outline: none;
+        border-color: #00ffff;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+      }
+      .tagline {
+        color: #00ffff;
+        font-size: 18px;
+        margin-bottom: 20px;
+      }
+      #advice {
+        color: #00ffff;
+        font-size: 16px;
+        margin-top: 15px;
+        padding: 10px;
+        background: rgba(0, 255, 255, 0.1);
+        border-radius: 6px;
+      }
+      h1 {
+        font-size: 36px;
+        margin-bottom: 10px;
+        text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <video autoplay muted loop id="bg-video">
+      <source
+        src="{{ url_for('static', filename='video/traffic_video.mp4') }}"
+        type="video/mp4"
+      />
+    </video>
+    <a href="{{ url_for('home') }}" class="back-btn">⬅ Back to Dashboard</a>
+    <div class="overlay"></div>
+
+    <div class="container">
+      <h1>SmartRaahi</h1>
+      <h1>Real-Time Traffic Flow Predictor</h1>
+      <p class="tagline">Predict congestion levels using AI-powered analysis</p>
+
+      <form id="traffic-form">
+        <label>Junction</label>
+        <select name="junction" required>
+          <option value="Junction A">Junction A</option>
+          <option value="Junction B">Junction B</option>
+          <option value="Junction C">Junction C</option>
+        </select>
+
+        <label>Date & Time</label>
+        <input type="datetime-local" name="datetime" required />
+
+        <button type="submit" class="predict-btn">🔮 Predict Traffic</button>
+      </form>
+
+      <!-- Current Traffic Status -->
+      <div id="current-traffic">
+        <h2>Predicted Traffic Status</h2>
+        <div class="traffic-status" id="traffic-status"></div>
+        <p style="color: #aaa; font-size: 14px">
+          at <span id="current-time"></span>
+        </p>
+        <p id="advice"></p>
+      </div>
+
+      <!-- Next 5 Hours Forecast -->
+      <div id="forecast-card">
+        <h2>Traffic Forecast (Next 6 Hours)</h2>
+        <div class="chart-container">
+          <canvas id="trafficChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById("traffic-form");
+      const currentTrafficDiv = document.getElementById("current-traffic");
+      const forecastCard = document.getElementById("forecast-card");
+      const trafficStatus = document.getElementById("traffic-status");
+      const currentTimeSpan = document.getElementById("current-time");
+      const adviceEl = document.getElementById("advice");
+      let trafficChartInstance = null;
+
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const junction = formData.get("junction");
+        const datetime = new Date(formData.get("datetime"))
+          .toLocaleString("sv-SE", { hour12: false })
+          .replace(" ", "T");
+
+        try {
+          const response = await fetch("/predict_traffic", {
+            method: "POST",
+            body: new URLSearchParams({ junction, datetime }),
+          });
+
+          const data = await response.json();
+          console.log("Traffic prediction data:", data);
+
+          if (data.success) {
+            // Show current traffic status
+            currentTrafficDiv.style.display = "block";
+            trafficStatus.textContent = data.current_label;
+            currentTimeSpan.textContent = data.current_time;
+            adviceEl.textContent = data.advice;
+
+            // Show forecast for next 6 hours
+            forecastCard.style.display = "block";
+
+            // Prepare chart data
+            const labels = data.timestamps;
+            const predictions = data.predictions;
+
+            // Color based on traffic level
+            const backgroundColors = data.labels.map((label) => {
+              if (label.includes("Low")) return "rgba(0, 255, 0, 0.6)";
+              if (label.includes("Moderate")) return "rgba(255, 165, 0, 0.6)";
+              return "rgba(255, 0, 0, 0.6)";
+            });
+
+            const borderColors = data.labels.map((label) => {
+              if (label.includes("Low")) return "rgb(0, 255, 0)";
+              if (label.includes("Moderate")) return "rgb(255, 165, 0)";
+              return "rgb(255, 0, 0)";
+            });
+
+            // Destroy previous chart if exists
+            if (trafficChartInstance) {
+              trafficChartInstance.destroy();
+            }
+
+            // Draw chart
+            const ctx = document
+              .getElementById("trafficChart")
+              .getContext("2d");
+
+            trafficChartInstance = new Chart(ctx, {
+              type: "bar",
+              data: {
+                labels: labels,
+                datasets: [
+                  {
+                    label: "Traffic Level (Vehicles)",
+                    data: predictions,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 2,
+                    borderRadius: 5,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    display: true,
+                    labels: {
+                      color: "#00ffff",
+                      font: { size: 14 },
+                    },
+                  },
+                  tooltip: {
+                    backgroundColor: "rgba(0,0,0,0.8)",
+                    titleColor: "#00ffff",
+                    bodyColor: "#fff",
+                    borderColor: "#00ffff",
+                    borderWidth: 1,
+                    callbacks: {
+                      afterLabel: function (context) {
+                        return data.labels[context.dataIndex];
+                      },
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    title: {
+                      display: true,
+                      text: "Time (Hours)",
+                      color: "#00ffff",
+                      font: { size: 14, weight: "bold" },
+                    },
+                    ticks: {
+                      color: "#fff",
+                      font: { size: 12 },
+                    },
+                    grid: {
+                      color: "rgba(255,255,255,0.1)",
+                      drawBorder: true,
+                      borderColor: "#00ffff",
+                    },
+                  },
+                  y: {
+                    beginAtZero: true,
+                    title: {
+                      display: true,
+                      text: "Predicted Vehicles",
+                      color: "#00ffff",
+                      font: { size: 14, weight: "bold" },
+                    },
+                    ticks: {
+                      color: "#fff",
+                      font: { size: 12 },
+                    },
+                    grid: {
+                      color: "rgba(255,255,255,0.1)",
+                      drawBorder: true,
+                      borderColor: "#00ffff",
+                    },
+                  },
+                },
+              },
+            });
+
+            // Smooth scroll to results
+            setTimeout(() => {
+              currentTrafficDiv.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            }, 100);
+          } else {
+            alert("Error: " + data.error);
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Failed to fetch traffic prediction. Please try again.");
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🪖 Helmet Compliance Detection</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/helmet.css') }}"
+    />
+    <style>
+      /* small inline adjustments to ensure layout works without external CSS */
+      body {
+        font-family: "Poppins", sans-serif;
+        background: #071020;
+        color: #e8f8f8;
+        margin: 0;
+        padding: 24px;
+      }
+      a.back-btn {
+        position: fixed;
+        left: 16px;
+        top: 16px;
+        background: rgba(0, 0, 0, 0.45);
+        color: #fff;
+        padding: 8px 10px;
+        border-radius: 8px;
+        text-decoration: none;
+        z-index: 2000;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 48px auto;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 8px;
+        color: #bfefff;
+      }
+      .upload-box {
+        margin: 18px auto;
+        border: 2px dashed rgba(190, 239, 255, 0.12);
+        border-radius: 12px;
+        padding: 26px;
+        text-align: center;
+        cursor: pointer;
+        max-width: 800px;
+        background: rgba(255, 255, 255, 0.01);
+      }
+      .upload-box.dragover {
+        border-color: #00e1ff;
+        box-shadow: 0 6px 20px rgba(0, 225, 255, 0.06);
+      }
+      .upload-box input {
+        display: none;
+      }
+      .img-row {
+        display: flex;
+        gap: 18px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+      .img-box {
+        background: rgba(255, 255, 255, 0.02);
+        padding: 12px;
+        border-radius: 8px;
+        width: 48%;
+        min-width: 260px;
+        text-align: center;
+        box-sizing: border-box;
+      }
+      .img-box img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 6px;
+        border: 3px solid rgba(255, 255, 255, 0.04);
+      }
+      #resultBox {
+        margin-top: 18px;
+        text-align: center;
+      }
+      #resultText {
+        font-size: 1.18rem;
+        margin: 8px 0;
+      }
+      #detectionList {
+        text-align: left;
+        max-width: 800px;
+        margin: 12px auto 0;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 8px;
+        list-style: none;
+        color: #eafcff;
+      }
+      #detectionList li {
+        padding: 8px 10px;
+        border-bottom: 1px dashed rgba(190, 239, 255, 0.03);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .badge {
+        padding: 6px 10px;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+      .badge.helmet {
+        background: #00ff99;
+        color: #05210a;
+      }
+      .badge.nohelmet {
+        background: #ff6b6b;
+        color: #1b0b0b;
+      }
+      .btn {
+        margin-top: 12px;
+        padding: 10px 14px;
+        background: #00c7a7;
+        color: #001;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .btn[disabled] {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .small {
+        font-size: 0.9rem;
+        color: #bfefff;
+      }
+      .hidden {
+        display: none;
+      }
+      .spinner {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: 3px solid rgba(255, 255, 255, 0.12);
+        border-top-color: #00e1ff;
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .plate-box {
+        margin-top: 12px;
+        text-align: center;
+      }
+      .plate-box img {
+        max-width: 260px;
+        border-radius: 6px;
+        border: 2px solid rgba(255, 255, 255, 0.06);
+      }
+      @media (max-width: 880px) {
+        .img-box {
+          width: 100%;
+        }
+        #detectionList {
+          padding: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="{{ url_for('home') }}" class="back-btn">⬅ Back</a>
+
+    <div class="container" role="main" aria-labelledby="pageTitle">
+      <h1>SmartRaahi</h1>
+      <h1 id="pageTitle">Helmet Compliance Detection</h1>
+
+      <div
+        id="dropZone"
+        class="upload-box"
+        tabindex="0"
+        aria-label="Upload image for helmet detection"
+      >
+        <p style="font-size: 1.05rem; color: #dff8ff; margin: 6px 0">
+          Drag & drop an image here — or click to choose a file
+        </p>
+        <p class="small">Supported: .jpg .jpeg .png (max recommended ~5MB)</p>
+        <input id="fileInput" type="file" accept="image/*" />
+        <div
+          id="dropMsg"
+          style="margin-top: 12px; color: #aeeeff; font-weight: 600"
+        >
+          No file chosen
+        </div>
+      </div>
+
+      <div id="previewContainer" class="hidden" aria-live="polite">
+        <div
+          class="img-row"
+          role="region"
+          aria-label="Image preview and detection"
+        >
+          <div class="img-box">
+            <h3 style="color: #bfefff; margin: 6px 0">Original Image</h3>
+            <img id="inputImage" src="#" alt="Uploaded image" />
+          </div>
+
+          <div class="img-box">
+            <h3 style="color: #bfefff; margin: 6px 0">Detection Result</h3>
+            <img id="outputImage" src="#" alt="Detection result image" />
+          </div>
+        </div>
+
+        <div id="resultBox">
+          <h2 id="resultText" class="small">Waiting for detection...</h2>
+
+          <div style="margin-top: 10px">
+            <button id="detectBtn" class="btn">Run Helmet Detection</button>
+            <span
+              id="detectSpinner"
+              class="spinner hidden"
+              aria-hidden="true"
+            ></span>
+          </div>
+
+          <ul
+            id="detectionList"
+            class="hidden"
+            aria-live="polite"
+            aria-label="Detections"
+          >
+            <!-- detection items appended here -->
+          </ul>
+
+          <div
+            id="plateContainer"
+            class="plate-box hidden"
+            aria-label="Cropped license plate"
+          >
+            <h4 style="color: #bfefff; margin-bottom: 8px">
+              Detected Number Plate
+            </h4>
+            <img id="plateImage" src="#" alt="Cropped plate" />
+            <div style="margin-top: 8px">
+              <a id="plateDownload" class="btn" href="#" download
+                >Download Plate Image</a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="errorMsg"
+        class="hidden"
+        style="
+          color: #ffb3b3;
+          margin-top: 14px;
+          text-align: center;
+          font-weight: 700;
+        "
+      ></div>
+    </div>
+
+    <script>
+      (() => {
+        const dropZone = document.getElementById("dropZone");
+        const fileInput = document.getElementById("fileInput");
+        const dropMsg = document.getElementById("dropMsg");
+        const previewContainer = document.getElementById("previewContainer");
+        const inputImage = document.getElementById("inputImage");
+        const outputImage = document.getElementById("outputImage");
+        const detectBtn = document.getElementById("detectBtn");
+        const detectSpinner = document.getElementById("detectSpinner");
+        const detectionList = document.getElementById("detectionList");
+        const resultText = document.getElementById("resultText");
+        const errorMsg = document.getElementById("errorMsg");
+        const plateContainer = document.getElementById("plateContainer");
+        const plateImage = document.getElementById("plateImage");
+        const plateDownload = document.getElementById("plateDownload");
+
+        let currentFile = null;
+
+        // utility to show errors
+        function showError(text) {
+          errorMsg.textContent = text;
+          errorMsg.classList.remove("hidden");
+          setTimeout(() => errorMsg.classList.add("hidden"), 6000);
+        }
+
+        // click -> open file dialog
+        dropZone.addEventListener("click", () => fileInput.click());
+
+        // keyboard accessible: Enter to open
+        dropZone.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInput.click();
+          }
+        });
+
+        // drag events
+        dropZone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dropZone.classList.add("dragover");
+        });
+        dropZone.addEventListener("dragleave", (e) => {
+          dropZone.classList.remove("dragover");
+        });
+        dropZone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dropZone.classList.remove("dragover");
+          const f = e.dataTransfer.files && e.dataTransfer.files[0];
+          if (f) handleFile(f);
+        });
+
+        fileInput.addEventListener("change", (e) => {
+          const f = e.target.files && e.target.files[0];
+          if (f) handleFile(f);
+        });
+
+        function handleFile(file) {
+          // basic validation
+          if (!file) return;
+          const allowed = ["image/jpeg", "image/png", "image/jpg"];
+          if (!allowed.includes(file.type)) {
+            showError("Unsupported file type. Please upload JPG or PNG image.");
+            return;
+          }
+          if (file.size > 8 * 1024 * 1024) {
+            // 8MB limit
+            showError(
+              "File too large (max 8MB). Please choose a smaller image."
+            );
+            return;
+          }
+
+          currentFile = file;
+          dropMsg.textContent = `Selected: ${file.name}`;
+          previewContainer.classList.remove("hidden");
+          detectionList.classList.add("hidden");
+          plateContainer.classList.add("hidden");
+          resultText.textContent = "Ready to run detection";
+          outputImage.src = ""; // clear previous
+          plateImage.src = "";
+
+          // show original preview
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            inputImage.src = ev.target.result;
+            // keep output image placeholder the same until server returns annotated result
+            outputImage.src = ev.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+
+        // run detection
+        detectBtn.addEventListener("click", async () => {
+          if (!currentFile) {
+            showError("Please upload an image first.");
+            return;
+          }
+
+          detectBtn.disabled = true;
+          detectSpinner.classList.remove("hidden");
+          resultText.textContent = "Detecting...";
+
+          // build form data
+          const fd = new FormData();
+          fd.append("image", currentFile);
+
+          try {
+            const res = await fetch("/api/helmet_detect", {
+              method: "POST",
+              body: fd,
+            });
+
+            if (!res.ok) {
+              const txt = await res.text();
+              throw new Error(`Server returned ${res.status}: ${txt}`);
+            }
+
+            const json = await res.json();
+            if (!json.success) {
+              throw new Error(json.error || "Detection failed");
+            }
+
+            // show annotated image returned by server
+            if (json.annotated_image) {
+              outputImage.src = json.annotated_image;
+            }
+
+            // show detections list
+            const dets = Array.isArray(json.detections) ? json.detections : [];
+            detectionList.innerHTML = ""; // clear
+            if (dets.length === 0) {
+              resultText.textContent = "No objects detected.";
+              detectionList.classList.add("hidden");
+            } else {
+              detectionList.classList.remove("hidden");
+              // sort to show helmet/no-helmet first
+              dets.sort(
+                (a, b) =>
+                  (a.label === "without helmet" ? -1 : 1) -
+                  (b.label === "without helmet" ? -1 : 1)
+              );
+              dets.forEach((d) => {
+                const li = document.createElement("li");
+                const left = document.createElement("div");
+                left.textContent = `${d.label}`;
+                const right = document.createElement("div");
+                right.innerHTML = `<span style="opacity:0.9">${d.confidence}%</span>`;
+                li.appendChild(left);
+                // add badge color
+                const badge = document.createElement("span");
+                badge.className =
+                  "badge " +
+                  (d.label === "without helmet" ? "nohelmet" : "helmet");
+                badge.textContent =
+                  d.label === "without helmet" ? "Violation" : "OK";
+                right.prepend(badge);
+                li.appendChild(right);
+                detectionList.appendChild(li);
+              });
+
+              // set result text (priority: any without helmet -> violation)
+              const anyNoHelmet = dets.some(
+                (d) => d.label === "without helmet"
+              );
+              if (anyNoHelmet) {
+                resultText.textContent = "Helmet violation detected";
+                resultText.style.color = "#ff6b6b";
+              } else {
+                resultText.textContent = "All riders wearing helmets";
+                resultText.style.color = "#00ff99";
+              }
+            }
+
+            // plate image if provided
+            if (json.plate_image) {
+              plateContainer.classList.remove("hidden");
+              plateImage.src = json.plate_image;
+              plateDownload.href = json.plate_image;
+            } else {
+              plateContainer.classList.add("hidden");
+            }
+          } catch (err) {
+            console.error("Detection error:", err);
+            showError("Detection failed: " + (err.message || err));
+            resultText.textContent = "Detection failed";
+            resultText.style.color = "#ffb3b3";
+          } finally {
+            detectBtn.disabled = false;
+            detectSpinner.classList.add("hidden");
+          }
+        });
+
+        // optional: auto-run detection after upload (commented out)
+        // fileInput.addEventListener('change', () => { setTimeout(() => detectBtn.click(), 600); });
+      })();
+    </script>
+  </body>
+</html>

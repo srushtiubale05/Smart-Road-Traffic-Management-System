@@ -1,0 +1,311 @@
+/* General */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  overflow-y: auto; /* allow vertical scroll */
+  overflow-x: hidden; /* hide horizontal scroll */
+  color: white;
+}
+
+/* Background Video */
+#bgVideo {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+/* Dark overlay for readability */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: -1;
+}
+
+/* Container */
+.container {
+  text-align: center;
+  padding: 35px 20px;
+}
+
+.s1 {
+  text-align: center;
+  padding: 35px 20px;
+}
+h1 {
+  font-size: 2.8em;
+  letter-spacing: 1px;
+  text-shadow: 0px 0px 10px #00e1ff;
+}
+
+.subtitle {
+  margin-top: 10px;
+  font-size: 1.2em;
+  color: #a5e6ff;
+  text-shadow: 0px 0px 8px rgba(0, 255, 255, 0.4);
+}
+
+/* Card Grid */
+.card-grid {
+  margin-top: 60px;
+  display: grid;
+  gap: 30px;
+  padding: 0 10%;
+  justify-items: center;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Desktop Layout: 3 cards on top, 2 centered below */
+@media (min-width: 900px) {
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Make last two cards centered in second row */
+  .card-grid a:nth-child(4),
+  .card-grid a:nth-child(5) {
+    grid-column: span 1;
+    justify-self: center;
+  }
+}
+
+/* Individual Cards */
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 25px;
+  text-decoration: none;
+  color: white;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+  transition: all 0.4s ease;
+  backdrop-filter: blur(10px);
+  width: 280px;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 0 25px #00e1ff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Icons */
+.icon {
+  font-size: 3em;
+  color: #00e1ff;
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.card:hover .icon {
+  color: #ff00a0;
+  transform: rotate(10deg);
+}
+
+/* Titles */
+.card h2 {
+  font-size: 1.3em;
+  margin-bottom: 8px;
+  color: #00e1ff;
+}
+
+/* Text */
+.card p {
+  font-size: 0.9em;
+  color: #ccefff;
+}
+
+/* FULL-SCREEN ANALYTICS OVERLAY (edge-to-edge) */
+.analytics-section {
+  display: none; /* toggled via JS */
+  position: fixed; /* cover the whole viewport */
+  inset: 0; /* top:0; right:0; bottom:0; left:0 */
+  width: calc(100% - 48px) !important;
+  max-width: calc(100% - 48px) !important;
+  height: auto !important;
+  max-height: 520px;
+  margin: 0;
+  padding: 28px;
+  background: rgba(2, 8, 14, 0.92); /* solid dark overlay for clarity */
+  color: #00e1ff;
+  z-index: 9999; /* on top of everything */
+  overflow-y: auto; /* allow scrolling inside overlay */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fade/slide animation when opening */
+.analytics-section.active {
+  display: block;
+  animation: analyticsEnter 360ms ease forwards;
+}
+@keyframes analyticsEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Top bar inside overlay: title + close button */
+.analytics-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 14px;
+  gap: 12px;
+  padding: 0 8px;
+}
+.analytics-topbar h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #00e1ff;
+}
+.analytics-close-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #dffbff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* Make realtime table full width (edge-to-edge inside overlay) */
+#realtime-table {
+  width: calc(100% - 48px); /* small horizontal padding for breathing room */
+  max-width: none;
+  margin: 8px 24px;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  overflow: hidden;
+}
+#realtime-table th,
+#realtime-table td {
+  padding: 12px 14px;
+  border: 1px solid rgba(0, 225, 255, 0.08);
+  text-align: center;
+  color: #dffbff;
+  font-size: 15px;
+}
+#realtime-table th {
+  background: rgba(0, 225, 255, 0.05);
+  color: #00e1ff;
+}
+
+/* Controls row: selects centered but full width container */
+.analytics-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 6px 12px 18px;
+}
+
+/* Chart canvases span wide and are tall - FIXED FOR FULL WIDTH */
+.analytics-section canvas {
+  display: block !important;
+  width: calc(100% - 48px) !important;
+  max-width: calc(100% - 48px) !important;
+  height: 400px !important;
+  margin: 12px 24px 28px;
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.01),
+    rgba(255, 255, 255, 0.008)
+  );
+  box-shadow: inset 0 8px 26px rgba(0, 0, 0, 0.55);
+  box-sizing: border-box;
+}
+
+#historicalChart,
+#predictiveChart {
+  box-sizing: border-box;
+}
+
+/* Alerts as a centered flex-wrapped row */
+#alerts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 24px 28px;
+}
+.alert-badge {
+  font-size: 14px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-weight: 600;
+}
+
+/* responsive tweaks */
+@media (max-width: 920px) {
+  #realtime-table {
+    width: calc(100% - 28px);
+    margin: 8px 14px;
+  }
+  .analytics-section canvas {
+    height: 350px !important;
+    width: calc(100% - 28px) !important;
+    max-width: calc(100% - 28px) !important;
+    margin: 12px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-topbar h2 {
+    font-size: 1.2rem;
+  }
+  #realtime-table th,
+  #realtime-table td {
+    padding: 10px 8px;
+    font-size: 13px;
+  }
+  .analytics-section canvas {
+    height: 300px !important;
+    width: calc(100% - 20px) !important;
+    max-width: calc(100% - 20px) !important;
+    margin: 12px 10px;
+  }
+  .analytics-section {
+    padding: 15px;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .analytics-section {
+    max-width: 100%;
+    padding: 15px;
+  }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 2em;
+  }
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+}

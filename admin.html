@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <h1>SmartRaahi</h1>
+    <title>Admin Dashboard - Traffic Monitoring</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: Arial;
+        margin: 20px;
+      }
+      canvas {
+        margin-bottom: 40px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 50%;
+        margin-bottom: 40px;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🚦 Admin Traffic Dashboard</h1>
+
+    <!-- Real-time traffic -->
+    <h2>Real-time Traffic Levels</h2>
+    <table id="realtime-table">
+      <tr>
+        <th>Junction</th>
+        <th>Traffic Level (%)</th>
+        <th>Status</th>
+      </tr>
+    </table>
+
+    <!-- Historical traffic -->
+    <h2>Historical Traffic (Last 30 Days)</h2>
+    <select id="historical-junction">
+      {% for junction in junctions %}
+      <option value="{{ junction }}">{{ junction }}</option>
+      {% endfor %}
+    </select>
+    <canvas id="historicalChart" width="600" height="300"></canvas>
+
+    <!-- Predictive traffic -->
+    <h2>Predictive Traffic (Next 24 Hours)</h2>
+    <select id="predictive-junction">
+      {% for junction in junctions %}
+      <option value="{{ junction }}">{{ junction }}</option>
+      {% endfor %}
+    </select>
+    <canvas id="predictiveChart" width="600" height="300"></canvas>
+    <h3>Alerts:</h3>
+    <ul id="alerts"></ul>
+
+    <script>
+      // -------- Real-time traffic --------
+      async function loadRealtime() {
+        const res = await fetch("/api/realtime");
+        const data = await res.json();
+        const table = document.getElementById("realtime-table");
+        table.innerHTML = `<tr><th>Junction</th><th>Traffic Level (%)</th><th>Status</th></tr>`;
+        data.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${row.junction}</td><td>${row.traffic_level}</td><td>${row.status}</td>`;
+          table.appendChild(tr);
+        });
+      }
+      loadRealtime();
+      setInterval(loadRealtime, 5000); // refresh every 5 sec
+
+      // -------- Historical traffic chart --------
+      const historicalCtx = document
+        .getElementById("historicalChart")
+        .getContext("2d");
+      let historicalChart = new Chart(historicalCtx, {
+        type: "line",
+        data: {},
+        options: { responsive: true },
+      });
+
+      async function loadHistorical(junction) {
+        const res = await fetch(`/api/historical/${junction}`);
+        const data = await res.json();
+        const labels = data.map((d) => d.date);
+        const values = data.map((d) => d.traffic_level);
+        historicalChart.data = {
+          labels: labels,
+          datasets: [
+            {
+              label: junction + " Traffic",
+              data: values,
+              borderColor: "blue",
+              fill: false,
+            },
+          ],
+        };
+        historicalChart.update();
+      }
+
+      document
+        .getElementById("historical-junction")
+        .addEventListener("change", (e) => loadHistorical(e.target.value));
+      loadHistorical(document.getElementById("historical-junction").value);
+
+      // -------- Predictive traffic chart --------
+      const predictiveCtx = document
+        .getElementById("predictiveChart")
+        .getContext("2d");
+      let predictiveChart = new Chart(predictiveCtx, {
+        type: "line",
+        data: {},
+        options: { responsive: true },
+      });
+
+      async function loadPredictive(junction) {
+        const res = await fetch(`/api/predictive/${junction}`);
+        const data = await res.json();
+        predictiveChart.data = {
+          labels: data.hours,
+          datasets: [
+            {
+              label: junction + " Predicted Traffic",
+              data: data.predictions,
+              borderColor: "red",
+              fill: false,
+            },
+          ],
+        };
+        predictiveChart.update();
+
+        // Alerts
+        const alertsEl = document.getElementById("alerts");
+        alertsEl.innerHTML = "";
+        data.alerts.forEach((alert) => {
+          const li = document.createElement("li");
+          li.textContent = `${alert.hour}: ${alert.alert}`;
+          alertsEl.appendChild(li);
+        });
+      }
+
+      document
+        .getElementById("predictive-junction")
+        .addEventListener("change", (e) => loadPredictive(e.target.value));
+      loadPredictive(document.getElementById("predictive-junction").value);
+    </script>
+  </body>
+</html>

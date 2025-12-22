@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vehicle Maintenance Prediction</title>
+
+    <!-- Minimal inline styling so this works even without your CSS file -->
+    <style>
+      :root {
+        --bg: #071017;
+        --glass: rgba(255, 255, 255, 0.03);
+        --accent: #00e6b8;
+        --muted: #cfeef6;
+        --danger: #ff7b7b;
+        --panel-radius: 12px;
+        --input-bg: rgba(255, 255, 255, 0.03);
+        --text: #2e91a2;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        background: var(--bg);
+        font-family: Inter, Arial, sans-serif;
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* Background video placeholder (keeps previous design) */
+      #bgVideo {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -10;
+        opacity: 0.35;
+      }
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: -9;
+      }
+
+      /* Back button */
+      .back-btn {
+        position: fixed;
+        left: 16px;
+        top: 16px;
+        z-index: 2000;
+        color: #fff;
+        text-decoration: none;
+        background: rgba(0, 0, 0, 0.45);
+        padding: 8px 10px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        font-weight: 600;
+      }
+
+      /* Main container */
+      .container {
+        max-width: 720px;
+        margin: 36px auto;
+        padding: 26px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.01)
+        );
+        border-radius: var(--panel-radius);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+      }
+
+      h1 {
+        margin: 0;
+        text-align: center;
+        font-size: 32px;
+        letter-spacing: 0.5px;
+      }
+      h2 {
+        margin: 6px 0 18px;
+        text-align: center;
+        color: #bfefff;
+        font-weight: 600;
+      }
+
+      .form-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      label {
+        font-size: 14px;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      select,
+      input[type="number"],
+      input[type="date"] {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: var(--input-bg);
+        color: var(--text);
+        font-size: 15px;
+        box-sizing: border-box;
+      }
+
+      /* Symptoms vertical list */
+      .symptom-title {
+        margin-top: 14px;
+        color: var(--muted);
+        font-weight: 700;
+      }
+      .symptom-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 6px;
+      }
+      .symptom-list label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text);
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .symptom-list input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--accent);
+      }
+
+      /* Predict button */
+      .btn {
+        margin-top: 12px;
+        padding: 12px 14px;
+        background: var(--accent);
+        color: #001;
+        border: none;
+        border-radius: 10px;
+        font-weight: 800;
+        cursor: pointer;
+        font-size: 15px;
+      }
+
+      /* Validation message */
+      #validationMsg {
+        display: none;
+        color: var(--danger);
+        font-weight: 700;
+        margin-top: 8px;
+        text-align: center;
+      }
+
+      /* Result area */
+      #resultCard {
+        margin-top: 18px;
+        padding: 14px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+        display: none;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+      }
+      #resultText {
+        font-size: 18px;
+        font-weight: 800;
+        margin: 6px 0;
+        color: #fff;
+      }
+      #confidence {
+        color: #dffbff;
+        margin: 0;
+      }
+
+      /* responsive */
+      @media (max-width: 560px) {
+        .container {
+          margin: 18px;
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- optional background video (remove if you don't have the file) -->
+    <video id="bgVideo" autoplay muted loop>
+      <source
+        src="{{ url_for('static', filename='video/car_maintenance.mp4') }}"
+        type="video/mp4"
+      />
+    </video>
+    <div class="overlay"></div>
+
+    <!-- Back button -->
+    <a
+      href="{{ url_for('home') }}"
+      class="back-btn"
+      aria-label="Back to Dashboard"
+      >← Back</a
+    >
+
+    <div class="container" role="main" aria-labelledby="pageTitle">
+      <h1 id="pageTitle">SmartRaahi</h1>
+      <h2>Vehicle Maintenance Prediction</h2>
+
+      <div class="form-panel" role="form" aria-label="Vehicle maintenance form">
+        <!-- Vehicle Model -->
+        <div>
+          <label for="Vehicle_Model">Vehicle Model *</label>
+          <select id="Vehicle_Model" aria-required="true">
+            <option value="">Select model</option>
+            <option>Car</option>
+            <option>SUV</option>
+            <option>Van</option>
+            <option>Truck</option>
+            <option>Bus</option>
+            <option>Motorcycle</option>
+          </select>
+        </div>
+
+        <!-- Mileage -->
+        <div>
+          <label for="Mileage">Mileage (km) *</label>
+          <input
+            id="Mileage"
+            type="number"
+            min="0"
+            placeholder="e.g., 45000"
+            aria-required="true"
+          />
+        </div>
+
+        <!-- Vehicle Age -->
+        <div>
+          <label for="Vehicle_Age">Vehicle Age (years) *</label>
+          <input
+            id="Vehicle_Age"
+            type="number"
+            min="0"
+            placeholder="e.g., 4"
+            aria-required="true"
+          />
+        </div>
+
+        <!-- Fuel Type -->
+        <div>
+          <label for="Fuel_Type">Fuel Type *</label>
+          <select id="Fuel_Type" aria-required="true">
+            <option value="">Select</option>
+            <option>Petrol</option>
+            <option>Diesel</option>
+            <option>Electric</option>
+            <option>Hybrid</option>
+          </select>
+        </div>
+
+        <!-- Last Service Date -->
+        <div>
+          <label for="Last_Service_Date">Last Service Date </label>
+          <input id="Last_Service_Date" type="date" />
+        </div>
+
+        <!-- Symptoms (vertical) -->
+        <div>
+          <h3 class="symptom-title">Vehicle Symptoms</h3>
+          <div class="symptom-list" id="symptomList">
+            <label
+              ><input type="checkbox" class="symptom" value="engine_noise" />
+              Engine Noise</label
+            >
+            <label
+              ><input type="checkbox" class="symptom" value="brake_noise" />
+              Brake Noise</label
+            >
+            <label
+              ><input type="checkbox" class="symptom" value="low_mileage" />
+              Very Low Mileage</label
+            >
+            <label
+              ><input type="checkbox" class="symptom" value="vibration" />
+              Vibrations</label
+            >
+            <label
+              ><input type="checkbox" class="symptom" value="warning_light" />
+              Warning Light On</label
+            >
+          </div>
+        </div>
+
+        <!-- Validation message -->
+        <div id="validationMsg" role="alert"></div>
+
+        <!-- Predict button -->
+        <button id="predictBtn" class="btn" type="button">
+          Predict Maintenance
+        </button>
+
+        <!-- Result card -->
+        <div id="resultCard" aria-live="polite">
+          <div id="resultText">Awaiting input...</div>
+          <p id="confidence"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- JS: validation + fetch to backend -->
+    <script>
+      const requiredIds = [
+        "Vehicle_Model",
+        "Mileage",
+        "Vehicle_Age",
+        "Fuel_Type",
+      ];
+
+      function validateRequired() {
+        const missing = [];
+        for (const id of requiredIds) {
+          const el = document.getElementById(id);
+          if (!el) {
+            missing.push(id);
+            continue;
+          }
+          const v = el.value;
+          if (v === "" || v === null) missing.push(id);
+        }
+        return missing;
+      }
+
+      function showValidation(msg) {
+        const el = document.getElementById("validationMsg");
+        if (!msg) {
+          el.style.display = "none";
+          el.textContent = "";
+        } else {
+          el.style.display = "block";
+          el.textContent = msg;
+        }
+      }
+
+      document
+        .getElementById("predictBtn")
+        .addEventListener("click", async () => {
+          // client-side validation
+          const missing = validateRequired();
+          if (missing.length > 0) {
+            showValidation(
+              "Please complete all required fields before prediction."
+            );
+            return; // STOP - do not predict
+          }
+          showValidation(null);
+
+          // collect symptoms
+          const symptoms = Array.from(
+            document.querySelectorAll(".symptom:checked")
+          ).map((cb) => cb.value);
+
+          // prepare payload, keep types safe
+          const payload = {
+            Vehicle_Model: document.getElementById("Vehicle_Model").value,
+            Mileage: Number(document.getElementById("Mileage").value) || 0,
+            Vehicle_Age:
+              Number(document.getElementById("Vehicle_Age").value) || 0,
+            Fuel_Type: document.getElementById("Fuel_Type").value,
+            Last_Service_Date:
+              document.getElementById("Last_Service_Date").value || null,
+            Symptoms: symptoms,
+          };
+
+          // UI: disable button while fetching
+          const btn = document.getElementById("predictBtn");
+          btn.disabled = true;
+          btn.textContent = "Predicting...";
+
+          try {
+            const res = await fetch("/api/predict_maintenance", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+
+            if (!data || !data.success) {
+              showValidation(
+                data?.error || "Prediction failed. Try again later."
+              );
+              btn.disabled = false;
+              btn.textContent = "Predict Maintenance";
+              return;
+            }
+
+            // show result
+            document.getElementById("resultCard").style.display = "block";
+            document.getElementById("resultText").innerText =
+              data.need_maintenance === "YES"
+                ? "Maintenance Required"
+                : "Vehicle in Good Condition";
+            document.getElementById("confidence").innerText =
+              data.probability !== null && data.probability !== undefined
+                ? `Confidence: ${data.probability.toFixed(2)}%`
+                : "";
+          } catch (err) {
+            console.error(err);
+            showValidation("Unable to contact server. Try again later.");
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "Predict Maintenance";
+          }
+        });
+
+      // live hide validation when user fills required fields
+      requiredIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("input", () => {
+          if (validateRequired().length === 0) showValidation(null);
+        });
+        el.addEventListener("change", () => {
+          if (validateRequired().length === 0) showValidation(null);
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,173 @@
+/* 🌆 General Page Setup */
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  overflow-y: auto;
+  color: white;
+  background: rgba(0, 0, 0, 0.8);
+  min-height: 100vh;
+}
+
+/* 🎥 Background Video */
+video#bgVideo {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+  filter: brightness(45%);
+}
+
+/* 🧩 Center Container */
+.container {
+  text-align: center;
+  margin-top: 80px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(15px);
+  padding: 40px 50px;
+  border-radius: 25px;
+  width: 650px;
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+  animation: fadeIn 1s ease-in-out;
+}
+
+/* 🏷️ Headings */
+h1 {
+  font-size: 2.2em;
+  margin-bottom: 25px;
+  color: #ff4c4c;
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.6);
+}
+
+/* 🧾 Form Layout */
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+label {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-weight: 600;
+  margin-top: 10px;
+  color: #ffffff;
+}
+
+/* 📦 Inputs and Select Boxes */
+select,
+input[type="range"] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  margin: 8px 0 15px;
+  background: rgba(255, 255, 255, 0.15);
+  color: rgb(254, 22, 22);
+  font-size: 15px;
+  transition: 0.3s;
+}
+
+select:focus,
+input:focus {
+  outline: none;
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 10px #ff4c4c;
+}
+
+/* 🔘 Predict Button */
+button {
+  background-color: #ff3333;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 30px;
+  font-size: 16px;
+  cursor: pointer;
+  color: white;
+  font-weight: 600;
+  margin-top: 15px;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-color: #ff6666;
+  box-shadow: 0 0 15px #ff3333;
+  transform: translateY(-2px);
+}
+
+/* 📊 Result Card */
+#resultCard {
+  margin-top: 30px;
+  font-size: 1.3em;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 25px;
+  border-radius: 18px;
+  display: none;
+  animation: fadeIn 0.6s ease-in;
+}
+
+#riskLevel {
+  font-size: 1.6em;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+#probabilities {
+  font-size: 1em;
+  line-height: 1.5;
+  color: #ddd;
+}
+
+/* ⬅ Back Button */
+.back-btn {
+  position: fixed;
+  top: 25px;
+  left: 25px;
+  background: rgba(0, 225, 255, 0.15);
+  border: 2px solid #00e1ff;
+  color: #00e1ff;
+  padding: 10px 22px;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95em;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 15px rgba(0, 225, 255, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.back-btn:hover {
+  background: #00e1ff;
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px #00e1ff;
+}
+
+/* ✨ Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes flash {
+  from {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+  to {
+    background-color: rgba(255, 0, 0, 0.4);
+  }
+}

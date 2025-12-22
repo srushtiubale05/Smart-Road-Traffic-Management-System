@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Helmet Compliance — Video Mode</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/helmet.css') }}"
+    />
+
+    <style>
+      /* keep the same look & feel as your image page */
+      body {
+        font-family: "Poppins", sans-serif;
+        background: #071020;
+        color: #e8f8f8;
+        margin: 0;
+        padding: 24px;
+      }
+      a.back-btn {
+        position: fixed;
+        left: 16px;
+        top: 16px;
+        background: rgba(0, 0, 0, 0.45);
+        color: #fff;
+        padding: 8px 10px;
+        border-radius: 8px;
+        text-decoration: none;
+        z-index: 2000;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 48px auto;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 8px;
+        color: #bfefff;
+      }
+      .upload-box {
+        margin: 18px auto;
+        border: 2px dashed rgba(190, 239, 255, 0.12);
+        border-radius: 12px;
+        padding: 26px;
+        text-align: center;
+        cursor: pointer;
+        max-width: 900px;
+        background: rgba(255, 255, 255, 0.01);
+      }
+      .upload-box.dragover {
+        border-color: #00e1ff;
+        box-shadow: 0 6px 20px rgba(0, 225, 255, 0.06);
+      }
+      .upload-box input {
+        display: none;
+      }
+      .preview-row {
+        display: flex;
+        gap: 18px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 18px;
+      }
+      .video-box {
+        background: rgba(255, 255, 255, 0.02);
+        padding: 12px;
+        border-radius: 8px;
+        width: 48%;
+        min-width: 300px;
+        box-sizing: border-box;
+        text-align: center;
+      }
+      .video-box video {
+        max-width: 100%;
+        border-radius: 6px;
+        border: 3px solid rgba(255, 255, 255, 0.04);
+        display: block;
+        margin: 0 auto;
+      }
+      #resultBox {
+        margin-top: 18px;
+        text-align: center;
+      }
+      .btn {
+        margin-top: 12px;
+        padding: 10px 14px;
+        background: #00c7a7;
+        color: #001;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .btn[disabled] {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .small {
+        font-size: 0.9rem;
+        color: #bfefff;
+      }
+      .hidden {
+        display: none;
+      }
+      .spinner {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: 3px solid rgba(255, 255, 255, 0.12);
+        border-top-color: #00e1ff;
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .plates {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 12px;
+      }
+      .plate-thumb {
+        width: 160px;
+        border-radius: 6px;
+        border: 2px solid rgba(255, 255, 255, 0.04);
+      }
+      .status {
+        color: #aeefff;
+        font-weight: 700;
+        margin-top: 10px;
+      }
+      .note {
+        color: #bfefff;
+        font-size: 0.95rem;
+        margin-top: 8px;
+      }
+
+      /* progress ring styles (same look as Stop-line) */
+      .progress-wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: 16px;
+        justify-content: center;
+        margin-top: 14px;
+      }
+      .progress-ring {
+        width: 96px;
+        height: 96px;
+        position: relative;
+      }
+      .progress-ring svg {
+        transform: rotate(-90deg);
+        width: 96px;
+        height: 96px;
+      }
+      .progress-text {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 96px;
+        height: 96px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #bfefff;
+      }
+      .progress-label {
+        font-size: 0.9rem;
+        color: #bfefff;
+      }
+
+      @media (max-width: 880px) {
+        .video-box {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="{{ url_for('home') }}" class="back-btn">⬅ Back</a>
+
+    <div class="container" role="main" aria-labelledby="pageTitle">
+      <h1>SmartRaahi</h1>
+      <h1 id="pageTitle">Helmet Compliance Detection — Video Mode</h1>
+      <p class="note" style="text-align: center">
+        Upload a short video (MP4 recommended). Server will process it
+        frame-by-frame with YOLO and return crops for violations.
+      </p>
+
+      <div
+        id="dropZone"
+        class="upload-box"
+        tabindex="0"
+        aria-label="Upload video for helmet detection"
+      >
+        <p style="font-size: 1.05rem; color: #dff8ff; margin: 6px 0">
+          Drag & drop a video here — or click to choose
+        </p>
+        <p class="small">
+          Supported: .mp4 .mov .avi (recommend under 60s for CPU). Max ~100MB
+          depending on server capacity.
+        </p>
+        <input id="fileInput" type="file" accept="video/*" />
+        <div
+          id="dropMsg"
+          style="margin-top: 12px; color: #aeeeff; font-weight: 600"
+        >
+          No file chosen
+        </div>
+      </div>
+
+      <div id="previewContainer" class="hidden" aria-live="polite">
+        <div
+          class="preview-row"
+          role="region"
+          aria-label="Video preview and outputs"
+        >
+          <div class="video-box">
+            <h3 style="color: #bfefff; margin: 6px 0">Selected Video</h3>
+            <video id="inputVideo" controls muted></video>
+            <div class="note" id="fileInfo"></div>
+          </div>
+        </div>
+
+        <div id="resultBox">
+          <div style="margin-top: 10px">
+            <button id="processBtn" class="btn">Process Video</button>
+            <span
+              id="processSpinner"
+              class="spinner hidden"
+              aria-hidden="true"
+            ></span>
+          </div>
+
+          <!-- Progress ring -->
+          <div
+            id="progressArea"
+            class="progress-wrapper hidden"
+            aria-hidden="true"
+          >
+            <div class="progress-ring" id="progressRing">
+              <svg viewBox="0 0 100 100" aria-hidden="true">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="44"
+                  stroke="rgba(255,255,255,0.08)"
+                  stroke-width="8"
+                  fill="none"
+                ></circle>
+                <circle
+                  id="progressCircle"
+                  cx="50"
+                  cy="50"
+                  r="44"
+                  stroke="#00e1ff"
+                  stroke-width="8"
+                  stroke-linecap="round"
+                  fill="none"
+                  stroke-dasharray="276.460"
+                  stroke-dashoffset="276.460"
+                ></circle>
+              </svg>
+              <div class="progress-text" id="progressText">0%</div>
+            </div>
+            <div>
+              <div class="progress-label" id="progressLabel">Waiting...</div>
+            </div>
+          </div>
+
+          <div id="status" class="status hidden"></div>
+
+          <div id="platesSection" class="hidden">
+            <h4 style="color: #bfefff; margin-top: 16px">
+              Cropped Plates (violations)
+            </h4>
+            <div id="plates" class="plates"></div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="errorMsg"
+        class="hidden"
+        style="
+          color: #ffb3b3;
+          margin-top: 14px;
+          text-align: center;
+          font-weight: 700;
+        "
+      ></div>
+    </div>
+
+    <script>
+      (() => {
+        const dropZone = document.getElementById("dropZone");
+        const fileInput = document.getElementById("fileInput");
+        const dropMsg = document.getElementById("dropMsg");
+        const previewContainer = document.getElementById("previewContainer");
+        const inputVideo = document.getElementById("inputVideo");
+        const fileInfo = document.getElementById("fileInfo");
+        const processBtn = document.getElementById("processBtn");
+        const processSpinner = document.getElementById("processSpinner");
+        const statusEl = document.getElementById("status");
+        const platesSection = document.getElementById("platesSection");
+        const platesEl = document.getElementById("plates");
+        const errorMsg = document.getElementById("errorMsg");
+
+        // Progress UI
+        const progressArea = document.getElementById("progressArea");
+        const progressCircle = document.getElementById("progressCircle");
+        const progressText = document.getElementById("progressText");
+        const progressLabel = document.getElementById("progressLabel");
+
+        let currentFile = null;
+        let currentPreviewURL = null;
+        let pollingTimer = null;
+        let simulatedTimer = null;
+        let simulatedValue = 0;
+
+        // circle geometry
+        const R = 44;
+        const circumference = 2 * Math.PI * R;
+        progressCircle.style.strokeDasharray = `${circumference}`;
+        progressCircle.style.strokeDashoffset = `${circumference}`;
+
+        // config for simulated progress
+        const SIMULATED_MAX_BEFORE_FINAL = 95;
+        const SIMULATED_STEP_MS = 800;
+        const SIMULATED_STEP_INC = 1;
+        const POLL_INTERVAL_MS = 1500;
+
+        function showError(text) {
+          errorMsg.textContent = text;
+          errorMsg.classList.remove("hidden");
+          setTimeout(() => errorMsg.classList.add("hidden"), 7000);
+        }
+
+        function setPreviewURL(file) {
+          if (currentPreviewURL) {
+            URL.revokeObjectURL(currentPreviewURL);
+            currentPreviewURL = null;
+          }
+          if (!file) {
+            inputVideo.removeAttribute("src");
+            return;
+          }
+          currentPreviewURL = URL.createObjectURL(file);
+          inputVideo.src = currentPreviewURL;
+          inputVideo.load();
+        }
+
+        function updateProgress(pct, label) {
+          pct = Math.max(0, Math.min(100, Math.round(pct)));
+          const offset = circumference - (pct / 100) * circumference;
+          progressCircle.style.strokeDashoffset = `${offset}`;
+          progressText.textContent = `${pct}%`;
+          progressLabel.textContent =
+            label || (pct < 100 ? "Processing..." : "Done");
+        }
+
+        function startSimulatedProgress(fromPct = 0) {
+          stopSimulatedProgress();
+          simulatedValue = Math.max(
+            0,
+            Math.min(SIMULATED_MAX_BEFORE_FINAL, Math.round(fromPct))
+          );
+          updateProgress(simulatedValue, "Processing...");
+          progressArea.classList.remove("hidden");
+
+          simulatedTimer = setInterval(() => {
+            if (simulatedValue < SIMULATED_MAX_BEFORE_FINAL) {
+              simulatedValue = Math.min(
+                SIMULATED_MAX_BEFORE_FINAL,
+                simulatedValue + SIMULATED_STEP_INC
+              );
+              updateProgress(simulatedValue, "Processing...");
+            } else {
+              updateProgress(simulatedValue, "Processing...");
+            }
+          }, SIMULATED_STEP_MS);
+        }
+
+        function stopSimulatedProgress() {
+          if (simulatedTimer) {
+            clearInterval(simulatedTimer);
+            simulatedTimer = null;
+          }
+        }
+
+        function startPolling(jobId, onComplete) {
+          if (!jobId) return;
+          stopPolling();
+          progressArea.classList.remove("hidden");
+          progressLabel.textContent = "Queued...";
+          const endpoint = `/api/helmet_status?job_id=${encodeURIComponent(
+            jobId
+          )}`;
+          pollingTimer = setInterval(async () => {
+            try {
+              const res = await fetch(endpoint, { cache: "no-store" });
+              if (!res.ok) {
+                console.warn("Status poll returned", res.status);
+                return;
+              }
+              const json = await res.json();
+              // expected: { progress: 42, status: "processing", plates: [...] } or { status:"completed", plates: [...] }
+              if (typeof json.progress === "number") {
+                updateProgress(
+                  json.progress,
+                  (json.status || "Processing").toString()
+                );
+              } else if (json.status === "processing") {
+                const current = parseInt(progressText.textContent) || 0;
+                updateProgress(Math.min(95, current + 3), json.status);
+              }
+
+              if (
+                json.status === "completed" ||
+                json.status === "done" ||
+                json.status === "finished"
+              ) {
+                stopPolling();
+                stopSimulatedProgress();
+                updateProgress(100, "Completed");
+                if (Array.isArray(json.plates) && json.plates.length > 0)
+                  renderPlates(json.plates);
+                if (typeof onComplete === "function") onComplete(json);
+              }
+            } catch (err) {
+              console.error("Polling error", err);
+            }
+          }, POLL_INTERVAL_MS);
+        }
+
+        function stopPolling() {
+          if (pollingTimer) {
+            clearInterval(pollingTimer);
+            pollingTimer = null;
+          }
+        }
+
+        function renderPlates(plates) {
+          platesEl.innerHTML = "";
+          if (!Array.isArray(plates) || plates.length === 0) {
+            platesSection.classList.add("hidden");
+            return;
+          }
+          platesSection.classList.remove("hidden");
+          plates.forEach((p, idx) => {
+            const a = document.createElement("a");
+            a.href = p;
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            a.download = "";
+
+            const img = document.createElement("img");
+            img.src = p.startsWith("data:") ? p : p + "?v=" + Date.now();
+            img.className = "plate-thumb";
+            img.alt = `Violation crop ${idx + 1}`;
+            img.onerror = function () {
+              console.error("Failed to load plate image:", p);
+            };
+
+            a.appendChild(img);
+            platesEl.appendChild(a);
+          });
+        }
+
+        // Drag & drop & file select handlers (same as before)
+        dropZone.addEventListener("click", () => fileInput.click());
+        dropZone.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInput.click();
+          }
+        });
+
+        dropZone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dropZone.classList.add("dragover");
+        });
+        dropZone.addEventListener("dragleave", () =>
+          dropZone.classList.remove("dragover")
+        );
+        dropZone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dropZone.classList.remove("dragover");
+          const f = e.dataTransfer.files && e.dataTransfer.files[0];
+          if (f) handleFile(f);
+        });
+
+        fileInput.addEventListener("change", (e) => {
+          const f = e.target.files && e.target.files[0];
+          if (f) handleFile(f);
+        });
+
+        function handleFile(file) {
+          if (!file) return;
+
+          // Accept by extension + fallback to MIME where present
+          const ext = (file.name.split(".").pop() || "").toLowerCase();
+          const allowedExt = ["mp4", "mov", "avi", "mkv", "webm"];
+          const allowedMimes = [
+            "video/mp4",
+            "video/quicktime",
+            "video/x-msvideo",
+            "video/avi",
+            "video/mov",
+            "video/x-matroska",
+            "video/webm",
+          ];
+
+          if (!allowedExt.includes(ext) && !allowedMimes.includes(file.type)) {
+            showError(
+              "Unsupported file type. Please upload MP4/MOV/AVI/MKV/WebM video."
+            );
+            return;
+          }
+
+          if (file.size > 150 * 1024 * 1024) {
+            showError(
+              "File too large (max 150MB). Please choose a smaller video."
+            );
+            return;
+          }
+
+          currentFile = file;
+          dropMsg.textContent = `Selected: ${file.name}`;
+          previewContainer.classList.remove("hidden");
+          platesSection.classList.add("hidden");
+          statusEl.classList.add("hidden");
+          setPreviewURL(file);
+
+          fileInfo.textContent = `${(file.size / 1024 / 1024).toFixed(
+            2
+          )} MB • ${file.name}`;
+
+          inputVideo.onloadedmetadata = () => {
+            const duration = inputVideo.duration || 0;
+            const maxSeconds = 90; // change as needed
+            if (duration > maxSeconds) {
+              showError(
+                `Video is too long (${Math.round(
+                  duration
+                )}s). Please upload under ${maxSeconds}s.`
+              );
+              currentFile = null;
+              fileInput.value = "";
+              setPreviewURL(null);
+              previewContainer.classList.add("hidden");
+            }
+            inputVideo.onloadedmetadata = null;
+          };
+        }
+
+        processBtn.addEventListener("click", () => {
+          if (!currentFile) {
+            showError("Please select a video first.");
+            return;
+          }
+          processBtn.disabled = true;
+          processSpinner.classList.remove("hidden");
+          statusEl.classList.remove("hidden");
+          statusEl.textContent =
+            "Uploading & processing... (may take a few minutes on CPU)";
+
+          const fd = new FormData();
+          fd.append("video", currentFile);
+
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", "/api/helmet_video_upload", true);
+
+          // show progress UI
+          progressArea.classList.remove("hidden");
+          updateProgress(0, "Uploading...");
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const pct = Math.round((e.loaded / e.total) * 100);
+              updateProgress(pct, `Uploading (${pct}%)`);
+            }
+          };
+
+          xhr.timeout = 10 * 60 * 1000; // 10 minutes
+          xhr.ontimeout = () => {
+            processBtn.disabled = false;
+            processSpinner.classList.add("hidden");
+            showError("Upload timed out.");
+            statusEl.textContent = "Upload timed out";
+            updateProgress(0, "Timeout");
+            stopSimulatedProgress();
+            stopPolling();
+          };
+
+          xhr.onload = () => {
+            processBtn.disabled = false;
+            processSpinner.classList.add("hidden");
+            stopSimulatedProgress();
+
+            if (xhr.status < 200 || xhr.status >= 300) {
+              showError(`Server returned ${xhr.status}`);
+              statusEl.textContent = "Processing failed";
+              updateProgress(0, "Server error");
+              return;
+            }
+
+            let json;
+            try {
+              json = JSON.parse(xhr.responseText);
+            } catch (err) {
+              showError("Invalid server response (not JSON).");
+              statusEl.textContent = "Processing failed";
+              updateProgress(0, "Invalid response");
+              return;
+            }
+
+            if (!json.success) {
+              showError(json.error || "Processing failed");
+              statusEl.textContent = "Processing failed";
+              updateProgress(0, "Processing failed");
+              return;
+            }
+
+            // if server returned plates immediately
+            if (Array.isArray(json.plates) && json.plates.length > 0) {
+              updateProgress(100, "Completed");
+              renderPlates(json.plates);
+              statusEl.textContent = json.message || "Processing complete";
+              return;
+            }
+
+            // if server returned a job_id -> poll for progress
+            if (json.job_id || json.task_id) {
+              const jobId = json.job_id || json.task_id;
+              updateProgress(5, "Queued");
+              statusEl.textContent = "Processing on server...";
+              startPolling(jobId, (finalJson) => {
+                if (
+                  Array.isArray(finalJson.plates) &&
+                  finalJson.plates.length > 0
+                ) {
+                  renderPlates(finalJson.plates);
+                  statusEl.textContent = "Processing complete";
+                } else {
+                  statusEl.textContent = "Processing complete (no plates)";
+                }
+              });
+              return;
+            }
+
+            // fallback: if no job_id and no plates, assume server processed synchronously
+            // (we may have been simulating progress). Jump to 100% and show message.
+            updateProgress(100, "Completed");
+            statusEl.textContent = json.message || "Processing complete";
+          };
+
+          xhr.onerror = () => {
+            processBtn.disabled = false;
+            processSpinner.classList.add("hidden");
+            showError("Upload failed (network error).");
+            statusEl.textContent = "Processing failed";
+            updateProgress(0, "Network error");
+            stopSimulatedProgress();
+            stopPolling();
+          };
+
+          try {
+            xhr.send(fd);
+            // start simulated progress while server processes (if server is synchronous)
+            startSimulatedProgress(
+              Math.max(parseInt(progressText.textContent) || 0, 0)
+            );
+          } catch (err) {
+            processBtn.disabled = false;
+            processSpinner.classList.add("hidden");
+            showError("Failed to send upload request.");
+            statusEl.textContent = "Processing failed";
+            updateProgress(0, "Send failed");
+            console.error("Failed to send XHR:", err);
+          }
+        });
+
+        window.addEventListener("beforeunload", () => {
+          if (currentPreviewURL) URL.revokeObjectURL(currentPreviewURL);
+          stopSimulatedProgress();
+          stopPolling();
+        });
+
+        console.log("Helmet video page loaded (progress ring added).");
+      })();
+    </script>
+  </body>
+</html>

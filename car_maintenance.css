@@ -1,0 +1,179 @@
+/* 🎥 Fullscreen Background Video */
+video#bgVideo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover; /* ensures full fit */
+  z-index: -1;
+  filter: brightness(35%) saturate(120%);
+}
+
+/* 🌌 General Page Setup */
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.8);
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 100vh;
+  scroll-behavior: smooth;
+}
+
+/* ⚙️ Container Setup */
+.container {
+  position: relative;
+  text-align: center;
+  padding: 35px 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* ✨ Title Styling */
+h1 {
+  font-size: 2.5em;
+  margin-bottom: 30px;
+  text-shadow: 0 0 20px #00ffff, 0 0 40px #00e6e6;
+  letter-spacing: 1px;
+}
+
+/* 🧩 Dashboard Layout */
+.dashboard {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 50px;
+  margin-top: 30px;
+}
+
+/* 🎛️ Input & Result Panels */
+.input-panel,
+.result-panel {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 30px;
+  width: 320px;
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.25);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.input-panel:hover,
+.result-panel:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 35px rgba(0, 255, 255, 0.5);
+}
+
+/* 🏷️ Labels and Inputs */
+label {
+  display: block;
+  margin-top: 18px;
+  font-weight: 600;
+  font-size: 1em;
+  text-align: left;
+}
+
+input,
+select,
+button {
+  margin-top: 8px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  font-size: 1em;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+input[type="range"] {
+  accent-color: #00ffff;
+}
+
+button {
+  background: linear-gradient(90deg, #00e6e6, #00ffff);
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 25px;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background: #00ffff;
+  box-shadow: 0 0 20px #00ffff;
+}
+
+/* 🧭 Result Panel */
+.result-panel h2 {
+  margin-top: 20px;
+  font-size: 1.4em;
+  color: #00ffff;
+}
+
+/* 💡 Maintenance Tips Box */
+.tips {
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 15px;
+  text-align: left;
+  font-size: 0.95em;
+}
+
+.tips ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+/* 🪄 Hidden Class */
+.hidden {
+  display: none;
+}
+/* Universal Back Button */
+.back-btn {
+  position: fixed;
+  top: 25px;
+  left: 25px;
+  background: rgba(0, 225, 255, 0.15);
+  border: 2px solid #00e1ff;
+  color: #00e1ff;
+  padding: 10px 20px;
+  border-radius: 30px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95em;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 15px rgba(0, 225, 255, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.back-btn:hover {
+  background: #00e1ff;
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px #00e1ff;
+}
+
+/* 📱 Responsive Design */
+@media (max-width: 768px) {
+  .dashboard {
+    flex-direction: column;
+    align-items: center;
+  }
+  .input-panel,
+  .result-panel {
+    width: 85%;
+  }
+  h1 {
+    font-size: 2em;
+  }
+}
